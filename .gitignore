@@ -1,0 +1,23 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# Virtual environments
+.venv
+
+/.quarto/
+**/*.quarto_ipynb
+
+# Great Docs build directory (ephemeral, do not commit)
+great-docs/
+
+# Great Docs versioned-build artifacts
+.great-docs-build/
+.great-docs-cache/
+.great-docs/
+
+/.luarc.json
