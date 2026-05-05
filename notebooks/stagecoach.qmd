@@ -1,6 +1,18 @@
 ---
-title: "StageCoach Prototype"
-format: html
+title: "StageCoach Explained"
+filters:
+  - sorting-hat
+  - ripper
+extensions:
+  sorting-hat:
+    keep:
+      - python
+  ripper:
+    include-yaml: false
+    output-name: "issue_manifest"
+    output-dir: "../src/stagecoach"
+    script-links-position: "none"
+format: gfm
 ---
 
 The stagecoach is a data ferrying system that automagically configures

@@ -7,11 +7,24 @@ authors = [
     { name = "TinasheMTapera", email = "tinashemtapera@gmail.com" }
 ]
 requires-python = ">=3.12"
-dependencies = []
+dependencies = [
+    "pyprojroot>=0.3.0",
+    "pyyaml>=6.0.3",
+    "questionary>=2.1.1",
+    "rich>=15.0.0",
+    "sheriff",
+    "typer>=0.25.1",
+]
 
 [project.scripts]
-stagecoach = "stagecoach:main"
+stagecoach = "stagecoach.cli:app"
 
 [build-system]
 requires = ["uv_build>=0.11.7,<0.12.0"]
 build-backend = "uv_build"
+
+[tool.setuptools.package-data]
+"stagecoach.templates" = ["*.yaml"]
+
+[tool.uv.sources]
+sheriff = { git = "https://github.com/GoldenPlanetaryHealthLab/sheriff.git", rev = "v0.1.0" }

@@ -1,0 +1,71 @@
+# Command Line Interface
+
+
+To run stagecoach, we define a simple CLI using the `typer` library.
+This allows users to run stagecoach from the command line, and provides
+a nice interface for specifying options.
+
+Once the CLI is defined as “hailing” the stagecoach, stagecoach will run
+`issue_manifest` to create the manifest, and then proceed with the rest
+of the stagecoach.
+
+``` python
+from pathlib import Path
+from rich.console import Console
+from rich.panel import Panel
+from sheriff.sheriff import Sheriff
+from stagecoach.issue_manifest import issue_manifest
+import typer
+
+app = typer.Typer(
+    name="stagecoach",
+    help="Stage authorized Frontier data into reproducible working environments.",
+)
+
+@app.command()
+def hail(
+    interactive: bool = typer.Option(
+        True,
+        "--interactive/--no-interactive",
+        help="Prompt for manifest fields interactively.",
+        ),
+    output_path: Path = typer.Option(
+        Path("stagecoach_manifest.yml"),
+        "--output",
+        "-o",
+        help="Where to write the manifest.",
+        ),
+    ) -> None:
+
+    """
+    Create a Stagecoach manifest.
+    """
+
+    # set up the printer
+    console = Console()
+    
+    # create a sheriff to check citizenship, sorta like going through customs!
+    customs_sheriff = Sheriff()
+
+    console.print(Panel.fit("🚛 Hailing the Stagecoach", style="bold cyan"))
+    try:
+        issue_manifest(
+            sheriff=customs_sheriff,
+            interactive=interactive,
+            output_path=str(output_path),
+        )
+
+    except Exception as exc:
+        console.print(f"[red]✖ {exc}[/red]")
+        raise typer.Exit(code=1)
+```
+
+    There's a new sheriff in town!
+    Found frontier file at: /n/holylabs/cgolden_lab/Lab/frontier/frontier.yml
+    Welcome to the frontier, citizen!
+    Citizen check passed: True
+
+``` python
+if __name__ == "__main__":
+    app()
+```

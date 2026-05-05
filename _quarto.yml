@@ -1,5 +1,9 @@
 project:
   title: "StageCoach"
-
+  output-dir: "user_guide"
+  render:
+    - "notebooks/*"
+    - "!great-docs/**"
+    - "!*.md"
 
 

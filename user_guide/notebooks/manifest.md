@@ -1,26 +1,10 @@
----
-title: "Manifest File"
-subtitle: "Need Access to the Gold Mine? Show Us Your Papers!"
-filters:
-  - sorting-hat
-  - ripper
-extensions:
-  sorting-hat:
-    keep:
-      - python
-  ripper:
-    include-yaml: false
-    output-name: "issue_manifest"
-    output-dir: "../src/stagecoach"
-    script-links-position: "none"
-format: gfm
----
+# Manifest File
 
-The manifest file is a YAML file that describes the
-terms of use for a dataset. It includes some simple
-automated checks to ensure that your project is
-compliant with the terms of use. The terms of use
-are as follows:
+
+The manifest file is a YAML file that describes the terms of use for a
+dataset. It includes some simple automated checks to ensure that your
+project is compliant with the terms of use. The terms of use are as
+follows:
 
 - You must be a person in the frontier
 
@@ -32,30 +16,26 @@ are as follows:
 
 This is easily translatable to a couple of simple checks.
 
-First, we import the `Sheriff` class from the `sheriff` module. Then, we create an instance of the `Sheriff` class and call the `check_citizen` method to perform the checks.
+First, we import the `Sheriff` class from the `sheriff` module. Then, we
+create an instance of the `Sheriff` class and call the `check_citizen`
+method to perform the checks.
 
 If the sheriff verifies citizenship, the checks will pass.
 
-```{python}
-#| sorting-hat: remove
-from sheriff.sheriff import Sheriff
+Now that we know that the user is a citizen, we can check that they are
+working in a designated [`town`](#TODO%20create%20town%20documentation).
 
-stagecoach_sheriff = Sheriff()
-citizen_ok = stagecoach_sheriff.check_citizen()
-print(f"Citizen check passed: {citizen_ok}")
-```
+Finally, we can implement the manifest. It’s going to be simple for now,
+but what it really needs to know is where IT is, and where the data is,
+and figure out how to get the data to the user’s specified location.
 
-Now that we know that the user is a citizen, we can
-check that they are working in a designated [`town`](#TODO create town documentation).
+<div class="sorting-hat-collapsed">
 
-Finally, we can implement the manifest. It's going to be simple
-for now, but what it really needs to know is where IT is,
-and where the data is, and figure out how to get the data
-to the user's specified location.
+<details><summary>PYTHON code (click to expand)</summary>
 
-```{python}
-#| sorting-hat: collapse
+<div class="cell-collapsed">
 
+``` python
 from pyprojroot import here
 import os
 import yaml
@@ -123,16 +103,19 @@ with open(output_path, "w") as f:
     f.write(yaml_manifest)
 ```
 
-If a citizen can pass the citizenship check, then 
-the stagecoach can issue a manifest which the user can fill in
-with the necessary information to get access to the data. The manifest
-is a yaml file in the `src/stagecoach` directory, so
-to expose it to the user, we can create a simple function that writes the 
-manifest to the file system.
+</div>
 
-```{python}
-#| sorting-hat: keep
+</details>
 
+</div>
+
+If a citizen can pass the citizenship check, then the stagecoach can
+issue a manifest which the user can fill in with the necessary
+information to get access to the data. The manifest is a yaml file in
+the `src/stagecoach` directory, so to expose it to the user, we can
+create a simple function that writes the manifest to the file system.
+
+``` python
 from importlib.resources import files
 
 def load_template():
@@ -146,19 +129,20 @@ def load_template():
     return yaml.safe_load(content)
 ```
 
-This function makes use of the `importlib.resources` module, and
-so long as the user's version of `stagecoach` is up to date,
-the above YAML will be the template they receive.
+This function makes use of the `importlib.resources` module, and so long
+as the user’s version of `stagecoach` is up to date, the above YAML will
+be the template they receive.
 
-Next, to actually issue the manifest, we can create a function that checks 
-citizenship and then writes the manifest to the file system. This function can be 
-called from the command line, or from a notebook, or from anywhere else.
+Next, to actually issue the manifest, we can create a function that
+checks citizenship and then writes the manifest to the file system. This
+function can be called from the command line, or from a notebook, or
+from anywhere else.
 
-We use `questionary` to make the function interactive, but it can also be used in a non-interactive way by passing the necessary information as arguments.
+We use `questionary` to make the function interactive, but it can also
+be used in a non-interactive way by passing the necessary information as
+arguments.
 
-```{python}
-#| sorting-hat: keep
-
+``` python
 import questionary
 
 from pathlib import Path
@@ -265,13 +249,10 @@ def issue_manifest(
             style="bold green",
         )
     )
-
 ```
 
-Issuing a manifest writes the manifest to the file system,
-where the user can modify the necessary bits and pieces
-to ensure they have correct access to the Gold Mine.
+Issuing a manifest writes the manifest to the file system, where the
+user can modify the necessary bits and pieces to ensure they have
+correct access to the Gold Mine.
 
-Next, check out the CLI module to see how we "hail," a stagecoach.
-
-
+Next, check out the CLI module to see how we “hail,” a stagecoach.

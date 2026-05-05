@@ -1,0 +1,22 @@
+citizen:
+  email: null
+  name: null
+frontier:
+  name: golden-lab
+  root: /n/holylabs/cgolden_lab/Lab/frontier
+  schema_version: 1.0
+paths:
+  goldmine: goldmine
+  governance: governance
+  town: town
+  works: works
+project:
+  input_data_dir: /n/holylabs/cgolden_lab/Lab/frontier/stagecoach/data/inputs
+  output_data_dir: /n/holylabs/cgolden_lab/Lab/frontier/stagecoach/data/outputs
+  project_name: null
+  project_working_dir: /n/holylabs/cgolden_lab/Lab/frontier/stagecoach
+remote:
+  globus:
+    globus_endpoint: null
+    globus_username: null
+    use_globus: false
