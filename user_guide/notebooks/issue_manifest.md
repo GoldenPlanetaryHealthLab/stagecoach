@@ -1,3 +1,28 @@
+# Manifest File
+
+
+The manifest file is a YAML file that describes the terms of use for a
+dataset. It includes some simple automated checks to ensure that your
+project is compliant with the terms of use. The terms of use are as
+follows:
+
+- You must be a person in the frontier
+
+- You must be working in the town of the frontier
+
+- Your project must have a git repository
+
+- Your project must have a name and a description
+
+This is easily translatable to a couple of simple checks.
+
+First, we import the `Sheriff` class from the `sheriff` module. Then, we
+create an instance of the `Sheriff` class and call the `check_citizen`
+method to perform the checks.
+
+If the sheriff verifies citizenship, the checks will pass.
+
+``` python
 from rich.console import Console
 from sheriff.sheriff import Sheriff
 
@@ -15,13 +40,24 @@ def check_citizenship(customs_sheriff: Sheriff) -> None:
         )
 
     console.print("[green]✔ Citizenship verified[/green]\n")
+```
 
+We can see this function in action below:
 
+``` python
 # mysheriff = Sheriff()
 
 # check_citizenship(mysheriff)
+```
 
+Now that we know that the user is a citizen, we can check that they are
+working in a designated [`town`](#TODO%20create%20town%20documentation).
 
+Next, we can implement the manifest. It’s going to be simple for now,
+but what it really needs to know is where IT is, and where the data is,
+and figure out how to get the data to the user’s specified location.
+
+``` python
 # we don't export this portion of script
 # because it will cause side effects to anyone who
 # loads it at runtime
@@ -90,8 +126,15 @@ def check_citizenship(customs_sheriff: Sheriff) -> None:
 
 # with open(output_path, "w") as f:
 #     f.write(yaml_manifest)
+```
 
+If a citizen can pass the citizenship check, then the stagecoach can
+issue a manifest which the user can fill in with the necessary
+information to get access to the data. The manifest is a yaml file in
+the `src/stagecoach` directory, so to expose it to the user, we can
+create a simple function that writes the manifest to the file system.
 
+``` python
 import yaml
 from typing import Any
 from importlib.resources import files
@@ -101,8 +144,24 @@ def load_template() -> dict[str, Any]:
 
     template_path = files("stagecoach.templates").joinpath("manifest.yml")
     return yaml.safe_load(template_path.read_text())
+```
 
+This function makes use of the `importlib.resources` module, and so long
+as the user’s version of `stagecoach` is up to date, the above YAML will
+be the template they receive.
 
+Next, to actually issue the manifest, we can create a function that
+prompts the user to fill in the necessary information. This is intended
+to be the primary interface at the command line. This is made by two
+subfunctions, `fill_manifest_interactively`, which prompts the user to
+fill in the manifest fields, and `write_manifest`, which writes the
+manifest to disk.
+
+We use `questionary` to make the function interactive, but it can also
+be used in a non-interactive way by passing the necessary information as
+arguments.
+
+``` python
 import questionary
 from typing import Any
 
@@ -159,13 +218,19 @@ def fill_manifest_interactively(manifest: dict[str, Any]) -> dict[str, Any]:
         ).ask()
 
     return manifest
+```
 
+In practice, this process looks like:
 
+``` python
 # mymanifest = load_template()
 
 # filled_manifest = fill_manifest_interactively(mymanifest)
+```
 
+Next, writing the manifest should be straight forward:
 
+``` python
 import questionary
 from pathlib import Path
 from rich.console import Console
@@ -197,8 +262,11 @@ def write_manifest(
             yaml.dump(manifest, f, sort_keys=False)
 
     console.print("[green]✔ Manifest created successfully[/green]\n")
+```
 
+To test:
 
+``` python
 # from tempfile import TemporaryDirectory
 
 # with TemporaryDirectory() as tmpdir:
@@ -208,8 +276,11 @@ def write_manifest(
 #     # show contents of the file
 #     with temp_manifest_path.open() as f:
 #         print(f.read())
+```
 
+Looks great! We now have the pieces to issue a manifest:
 
+``` python
 from rich.console import Console
 from rich.panel import Panel
 from sheriff.sheriff import Sheriff
@@ -261,3 +332,10 @@ def issue_manifest(
             style="bold green",
         )
     )
+```
+
+Issuing a manifest writes the manifest to the file system, where the
+user can modify the necessary bits and pieces to ensure they have
+correct access to the Gold Mine.
+
+Next, check out the CLI module to see how we “hail,” a stagecoach.

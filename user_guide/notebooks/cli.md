@@ -14,7 +14,7 @@ from pathlib import Path
 from rich.console import Console
 from rich.panel import Panel
 from sheriff.sheriff import Sheriff
-from stagecoach.issue_manifest import issue_manifest
+from stagecoach.stagecoach import StageCoach
 import typer
 
 app = typer.Typer(
@@ -35,8 +35,12 @@ def hail(
         "-o",
         help="Where to write the manifest.",
         ),
+    overwrite: bool = typer.Option(
+        False,
+        "--overwrite/--no-overwrite",
+        help="Whether to overwrite an existing manifest.",
+        ),
     ) -> None:
-
     """
     Create a Stagecoach manifest.
     """
@@ -47,12 +51,10 @@ def hail(
     # create a sheriff to check citizenship, sorta like going through customs!
     customs_sheriff = Sheriff()
 
-    console.print(Panel.fit("🚛 Hailing the Stagecoach", style="bold cyan"))
     try:
-        issue_manifest(
-            sheriff=customs_sheriff,
+        StageCoach(manifest_path=output_path).hail(
             interactive=interactive,
-            output_path=str(output_path),
+            overwrite=overwrite,
         )
 
     except Exception as exc:
@@ -60,10 +62,17 @@ def hail(
         raise typer.Exit(code=1)
 ```
 
-    There's a new sheriff in town!
-    Found frontier file at: /n/holylabs/cgolden_lab/Lab/frontier/frontier.yml
-    Welcome to the frontier, citizen!
-    Citizen check passed: True
+``` python
+@app.command()
+def inspect():
+    pass
+```
+
+``` python
+@app.command()
+def stage():
+    pass
+```
 
 ``` python
 if __name__ == "__main__":

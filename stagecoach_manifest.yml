@@ -1,0 +1,22 @@
+citizen:
+  email: ttapera@hsph.harvard.edu
+  name: tinashe
+frontier:
+  name: golden-lab
+  root: /n/holylabs/cgolden_lab/Lab/frontier
+  schema_version: 1.0
+paths:
+  goldmine: goldmine
+  governance: governance
+  town: town
+  works: works
+project:
+  input_data_dir: /n/holylabs/cgolden_lab/Lab/frontier/town/tinashe/foo/data/inputs
+  output_data_dir: /n/holylabs/cgolden_lab/Lab/frontier/town/tinashe/foo/data/outputs
+  project_name: foo
+  project_working_dir: /n/holylabs/cgolden_lab/Lab/frontier/town/tinashe/foo
+remote:
+  globus:
+    globus_endpoint: null
+    globus_username: null
+    use_globus: false
