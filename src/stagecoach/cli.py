@@ -40,9 +40,11 @@ def hail(
     customs_sheriff = Sheriff()
 
     try:
-        StageCoach(manifest_path=output_path).hail(
+        StageCoach(
+            sheriff = customs_sheriff,
+            manifest_path=output_path).hail(
             interactive=interactive,
-            overwrite=overwrite,
+            overwrite=overwrite
         )
 
     except Exception as exc:
@@ -51,12 +53,53 @@ def hail(
 
 
 @app.command()
-def inspect():
-    pass
+def inspect(
+    manifest_path: Path = typer.Option(
+        Path("stagecoach_manifest.yml"),
+        "--manifest",
+        "-m",
+        help="Path to the manifest to inspect.",
+    )
+    )-> None:
+    """
+    Inspect a Stagecoach manifest.
+    """
+    
+    # set up the printer
+    console = Console()
+    
+    # create a sheriff to check citizenship, sorta like going through customs!
+    customs_sheriff = Sheriff()
+
+    try:
+        StageCoach(
+            sheriff = customs_sheriff,
+            manifest_path=output_path,
+            console=console).inspect()
+    except Exception as exc:
+        console.print(f"[red]✖ {exc}[/red]")
+        raise typer.Exit(code=1)
 
 
 @app.command()
 def stage():
+    
+    # set up the printer
+    console = Console()
+    
+    # create a sheriff to check citizenship, sorta like going through customs!
+    customs_sheriff = Sheriff()
+
+    # try:
+    #     StageCoach(
+    #         sheriff = customs_sheriff,
+    #         manifest_path=output_path).stage(
+    #         console=console
+    #     )
+
+    # except Exception as exc:
+    #     console.print(f"[red]✖ {exc}[/red]")
+    #     raise typer.Exit(code=1)
     pass
 
 

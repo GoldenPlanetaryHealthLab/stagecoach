@@ -50,7 +50,9 @@ defined in the `stagecoach` class:
   transfer to get the data to the user.
 
 ``` python
+import yaml
 from stagecoach.issue_manifest import issue_manifest
+from stagecoach.manifest_checker import ManifestChecker
 from sheriff.sheriff import Sheriff
 from rich.console import Console
 from rich.panel import Panel
@@ -85,23 +87,80 @@ class StageCoach:
         self,
         interactive: bool = True,
         overwrite: bool = False,
+        sheriff: Sheriff | None = None,
+        console: Console | None = None,
+        manifest_path: str | Path | None = None,
     ) -> None:
-        """Create a Stagecoach manifest."""
+        """Create a StageCoach manifest."""
+        sheriff = sheriff or self.sheriff
+        console = console or self.console
+        manifest_path = Path(manifest_path) if manifest_path else self.manifest_path
+        console.print(Panel.fit("🚂 Hailing the Stagecoach..", style="bold cyan"))
 
-        self.console.print(Panel.fit("🚂 Hailing the Stagecoach", style="bold cyan"))
         issue_manifest(
-            customs_sheriff=self.sheriff,
+            customs_sheriff=sheriff,
             interactive=interactive,
-            output_path=self.manifest_path,
-            overwrite=overwrite
+            output_path=manifest_path,
+            overwrite=overwrite,
+            console=console,
         )
 
-    def inspect(self):
-        pass
+    def inspect(
+        self,
+        console: Console | None = None,
+    ) -> None:
+        """Inspect a StageCoach manifest."""
+
+        console = console or self.console
+        console.print(Panel.fit("📋 Inspecting the manifest...", style="bold cyan"))
+        checker = ManifestChecker(self.manifest_path)
+        checks = checker.run_all()
+
+        for result in checks:
+            if result.passed:
+                console.print(
+                    f"- [bold green]{result.name} check passed:[/bold green] "
+                    f"{result.message}"
+                )
+            else:
+                console.print(
+                    f"- [bold red]{result.name} check failed:[/bold red] "
+                    f"{result.message}"
+                )
+
+        if not checker.passes():
+            console.print("Manifest checks failed. Please review the results:")
+            console.print(
+                "- [bold red]See handbook for explanation of principles[/bold red] "
+                "https://goldenplanetaryhealthlab.github.io/01_orientation/start-here.html#the-working-philosophy"
+            )
+            raise RuntimeError("Manifest checks failed. Please review the results.")
+
+        manifest = yaml.safe_load(self.manifest_path.read_text())
+
+        if manifest.get("remote", {}).get("globus", {}).get("use_globus"):
+            console.print(
+                "- [bold yellow]Globus access requested. Checking with the Sheriff...[/bold yellow]"
+            )
+
+            clearance = self.sheriff.issue_globus_transfer(
+                globus_info=manifest.get("remote", {}).get("globus", {}),
+                console=console,
+                issue_transfer=False,
+            )
+            if clearance:
+                console.print("- [bold green]Globus credentials validated![/bold green]")
+            else:
+                raise RuntimeError(
+                    "Globus credentials validation failed. Please check your credentials."
+                )
+        
 
     def stage(self):
         pass
 ```
+
+    Manifest checks passed!
 
 Click on each section below to learn how stagecoach works in more
 detail, and to see examples of how to use it.

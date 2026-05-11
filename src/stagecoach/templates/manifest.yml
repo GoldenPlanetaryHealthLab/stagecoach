@@ -17,6 +17,9 @@ project:
   project_working_dir: /n/holylabs/cgolden_lab/Lab/frontier/stagecoach
 remote:
   globus:
-    globus_endpoint: null
+    globus_destination_endpoint: null
+    globus_destination_path: null
+    globus_source_endpoint: null
+    globus_source_path: null
     globus_username: null
     use_globus: false

@@ -1,5 +1,5 @@
 ---
-title: "Validate Manifest"
+title: "Manifest Checks"
 subtitle: "Let's make sure everything is in order before you set off on our journey!"
 filters:
   - sorting-hat
@@ -11,7 +11,7 @@ extensions:
     verbose: true
   ripper:
     include-yaml: false
-    output-name: "validate_manifest"
+    output-name: "checks"
     output-dir: "../src/stagecoach"
     script-links-position: "none"
 
@@ -83,6 +83,8 @@ class CheckResult:
 ```
 
 ```{python}
+#| eval: false
+
 ex_check = CheckResult(
     name="Example Check",
     passed=True,
@@ -264,7 +266,7 @@ def check_narrative_exists(directory: Path) -> CheckResult:
             passed=True,
             message=f"Found {len(files)} narrated analysis file(s).",
             principle=3,
-            severity="warning",
+            severity=Severity.WARNING
         )
 
     return CheckResult(
@@ -275,7 +277,27 @@ def check_narrative_exists(directory: Path) -> CheckResult:
             "Marimo, R Markdown, or Jupyter notebooks."
         ),
         principle=3,
-        severity="warning",
+        severity=Severity.WARNING
+    )
+
+def check_readme_exists(directory: Path) -> CheckResult:
+    if (directory / "README.md").exists() or (directory / "README.Rmd").exists() or (directory / "README.qmd").exists():
+        return CheckResult(
+            name="readme_exists",
+            passed=True,
+            message="README.md file exists.",
+            principle=3,
+        )
+
+    return CheckResult(
+        name="readme_exists",
+        passed=False,
+        message=(
+            "Project should include a README.md file that describes the project, "
+            "data sources, and analysis plan."
+        ),
+        principle=3,
+        severity=Severity.WARNING
     )
 ```
 
@@ -283,73 +305,33 @@ Finally, for principle 4, we'll gently nudge the user
 to scaffold their project using an R project file,
 or a Python project structure with a `src` directory.
 
-Next, let's define a manifest checker class. This will be
-the main workhorse of our manifest validation process, and will be responsible for 
-running all checks against a given manifest, and returning the results in a 
-structured format.
-
-```{python}
-import yaml
-from pathlib import Path
-
-class ManifestChecker:
-    """
-    Check whether a project directory satisfies minimum Frontier expectations.
-    The checker is intentionally lightweight. It does not use pytest internally.
-    Instead, each check returns a structured result that Stagecoach can display
-    nicely in `stagecoach inspect`.
-    """
-    def __init__(self, manifest_file: str | Path):
-        self.manifest =  yaml.safe_load(Path(manifest_file).read_text())
-        self.project_dir = self.manifest['project']['project_working_dir']
-
-    def run_all(self) -> list[CheckResult]:
-        """
-        Run all manifest checks.
-        """
-
-        return [
-            self.check_project_exists(),
-            self.check_git_repo(),
-            self.check_readme_exists(),
-            self.check_environment_spec_exists(),
-            self.check_analysis_code_exists(),
-            self.check_notebook_exists(),
-            self.check_data_provenance_exists(),
-            self.check_gitignore_exists(),
-            self.check_no_manual_final_files(),
-            self.check_data_dirs_exist(),
-        ]
-
-    def passes(self) -> bool:
-        """
-        Return True if all error-level checks pass.
-        """
-
-        return all(
-            result.passed
-            for result in self.run_all()
-            if result.severity == "error"
-        )
-```
-
-```{python}
-from rich.console import Console
-console = Console()
-```
-
 ```{python}
 #| sorting-hat: keep
+#| 
+def check_project_structure(directory: Path) -> CheckResult:
+    has_rproj = (directory / "project.Rproj").exists()
+    has_src = (directory / "src").exists() and (directory / "src").is_dir()
 
-from rich.console import Console
-from rich.panel import Panel
+    if has_rproj or has_src:
+        return CheckResult(
+            name="project_structure",
+            passed=True,
+            message="Project structure looks good.",
+            principle=4,
+        )
 
-def inspect(manifest) -> bool:
-    """
-    Inspect a manifest.
-    """
-
-    console.print(Panel.fit("🔎 Inspecting the Manifest", style="bold cyan"))
-
-    
+    return CheckResult(
+        name="project_structure",
+        passed=False,
+        message=(
+            "Project should be scaffolded using an R project file, or a Python "
+            "project structure with a `src` directory."
+        ),
+        principle=4,
+        severity=Severity.WARNING
+    )
 ```
+
+In the next module, we define the ManifestChecker class, which will run all of these 
+checks and more, and return a structured report that can be displayed in `stagecoach inspect`.
+

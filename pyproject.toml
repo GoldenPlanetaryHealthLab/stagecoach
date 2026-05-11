@@ -28,4 +28,4 @@ build-backend = "uv_build"
 "stagecoach.templates" = ["*.yaml"]
 
 [tool.uv.sources]
-sheriff = { git = "https://github.com/GoldenPlanetaryHealthLab/sheriff.git", rev = "v0.1.0" }
+sheriff = { git = "https://github.com/GoldenPlanetaryHealthLab/sheriff.git", rev = "v0.1.2" }

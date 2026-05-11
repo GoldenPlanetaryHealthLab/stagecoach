@@ -26,9 +26,7 @@ If the sheriff verifies citizenship, the checks will pass.
 from rich.console import Console
 from sheriff.sheriff import Sheriff
 
-console = Console()
-
-def check_citizenship(customs_sheriff: Sheriff) -> None:
+def check_citizenship(customs_sheriff: Sheriff, console: Console) -> None:
     """Validate Frontier citizenship using the Sheriff."""
 
     console.print("[bold]Checking citizenship...[/bold]")
@@ -88,7 +86,8 @@ and figure out how to get the data to the user’s specified location.
 #             # globus credentials for ferrying data to and from the frontier; only necessary if you want to ferry data to and from the frontier via globus
 #             "use_globus": False,
 #             "globus_username": None,
-#             "globus_endpoint": None
+#             "globus_source_endpoint": None,
+#             "globus_destination_endpoint": None
 #         }
 #     },
 #     # FILL IN THE BELOW SECTIONS WITH THE NECESSARY INFORMATION TO GET ACCESS TO THE DATA
@@ -235,12 +234,11 @@ import questionary
 from pathlib import Path
 from rich.console import Console
 
-console = Console()
-
 def write_manifest(
     manifest: dict[str, Any],
     output_path: str | Path,
-    overwrite: bool = False,
+    console: Console,
+    overwrite: bool = False
     ) -> None:
     """Write a manifest to disk."""
 
@@ -286,13 +284,12 @@ from rich.panel import Panel
 from sheriff.sheriff import Sheriff
 from pyprojroot import here
 
-console = Console()
-
 def issue_manifest(
     customs_sheriff: Sheriff,
+    console: Console,
     interactive: bool = True,
     output_path: str | Path = here() / "stagecoach_manifest.yml",
-    overwrite: bool = False,
+    overwrite: bool = False
 ) -> None:
 
     """

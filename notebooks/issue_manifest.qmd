@@ -21,6 +21,7 @@ format: gfm
 
 ```{python}
 #| sorting-hat: remove
+#| eval: false
 
 # imports & constants
 
@@ -101,67 +102,70 @@ to the user's specified location.
 # import os
 # import yaml
 
-# manifest = {
-#     "frontier": {
-#         # the name of the frontier may be used in future
-#         "name": "golden-lab",
-#         # the version may be used in future
-#         "schema_version": 1.0,
+manifest = {
+    "frontier": {
+        # the name of the frontier may be used in future
+        "name": "golden-lab",
+        # the version may be used in future
+        "schema_version": 1.0,
 
-#         # critical: we must know where the frontier starts
-#         "root": "/n/holylabs/cgolden_lab/Lab/frontier"
-#     },
-#     "paths": {
-#         # this is the general structure of the frontier
-#         "goldmine": "goldmine",
-#         "works": "works",
-#         "town": "town",
-#         "governance": "governance"
-#     },
-#     # we only have two compute options for now, but this may expand in the future
-#     "remote": {
-#         "globus": {
-#             # globus credentials for ferrying data to and from the frontier; only necessary if you want to ferry data to and from the frontier via globus
-#             "use_globus": False,
-#             "globus_username": None,
-#             "globus_endpoint": None
-#         }
-#     },
-#     # FILL IN THE BELOW SECTIONS WITH THE NECESSARY INFORMATION TO GET ACCESS TO THE DATA
-#     "citizen": {
+        # critical: we must know where the frontier starts
+        "root": "/n/holylabs/cgolden_lab/Lab/frontier"
+    },
+    "paths": {
+        # this is the general structure of the frontier
+        "goldmine": "goldmine",
+        "works": "works",
+        "town": "town",
+        "governance": "governance"
+    },
+    # we only have two compute options for now, but this may expand in the future
+    "remote": {
+        "globus": {
+            # globus credentials for ferrying data to and from the frontier; only necessary if you want to ferry data to and from the frontier via globus
+            "use_globus": False,
+            "globus_username": None,
+            "globus_source_endpoint": None,
+            "globus_source_path": None,
+            "globus_destination_endpoint": None,
+            "globus_destination_path": None
+        }
+    },
+    # FILL IN THE BELOW SECTIONS WITH THE NECESSARY INFORMATION TO GET ACCESS TO THE DATA
+    "citizen": {
 
-#         # your name must match your name in town
-#         "name": None,
+        # your name must match your name in town
+        "name": None,
 
-#         # email may be used in future for authentications
-#         "email": None
-#     },
+        # email may be used in future for authentications
+        "email": None
+    },
 
-#     "project": {
-#         # this must match the name of your project repository
-#         "project_name": None,
+    "project": {
+        # this must match the name of your project repository
+        "project_name": None,
 
-#         # must match above
-#         "project_working_dir": str(here()),
+        # must match above
+        "project_working_dir": str(here()),
 
-#         # this is the name of the folder that stagecoach will ferry 
-#         # your input data to
-#         "input_data_dir": str(here() / "data" / "inputs"),
+        # this is the name of the folder that stagecoach will ferry 
+        # your input data to
+        "input_data_dir": str(here() / "data" / "inputs"),
 
-#         # this is the name of the folder that stagecoach
-#         # will ferry your output data from;
-#         # only necessary if you want to ferry output data back to the frontier,
-#         # eg via globus
-#         "output_data_dir": str(here() / "data" / "outputs"),
-#     }
-# }
+        # this is the name of the folder that stagecoach
+        # will ferry your output data from;
+        # only necessary if you want to ferry output data back to the frontier,
+        # eg via globus
+        "output_data_dir": str(here() / "data" / "outputs"),
+    }
+}
 
-# yaml_manifest = yaml.dump(manifest)
+yaml_manifest = yaml.dump(manifest)
 
-# output_path = here() / "src" / "stagecoach" / "templates" / "manifest.yml"
+output_path = here() / "src" / "stagecoach" / "templates" / "manifest.yml"
 
-# with open(output_path, "w") as f:
-#     f.write(yaml_manifest)
+with open(output_path, "w") as f:
+    f.write(yaml_manifest)
 ```
 
 If a citizen can pass the citizenship check, then 
@@ -280,8 +284,8 @@ from rich.console import Console
 def write_manifest(
     manifest: dict[str, Any],
     output_path: str | Path,
-    overwrite: bool = False,
-    console: Console
+    console: Console,
+    overwrite: bool = False
     ) -> None:
     """Write a manifest to disk."""
 
@@ -333,10 +337,10 @@ from pyprojroot import here
 
 def issue_manifest(
     customs_sheriff: Sheriff,
+    console: Console,
     interactive: bool = True,
     output_path: str | Path = here() / "stagecoach_manifest.yml",
-    overwrite: bool = False,
-    console: Console
+    overwrite: bool = False
 ) -> None:
 
     """
