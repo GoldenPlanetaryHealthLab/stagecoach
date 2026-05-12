@@ -11,15 +11,15 @@ paths:
   town: town
   works: works
 project:
-  input_data_dir: /n/holylabs/cgolden_lab/Lab/frontier/town/tinashe/foo/data/inputs
-  output_data_dir: /n/holylabs/cgolden_lab/Lab/frontier/town/tinashe/foo/data/outputs
-  project_name: foo
-  project_working_dir: /n/holylabs/cgolden_lab/Lab/frontier/town/tinashe/foo
+  input_data_dir: /n/holylabs/cgolden_lab/Lab/frontier/stagecoach/data/inputs
+  output_data_dir: /n/holylabs/cgolden_lab/Lab/frontier/stagecoach/data/outputs
+  project_name: stagecoach
+  project_working_dir: /n/holylabs/cgolden_lab/Lab/frontier/stagecoach
 remote:
   globus:
-    globus_destination_endpoint: null
-    globus_destination_path: null
-    globus_source_endpoint: null
-    globus_source_path: null
-    globus_username: null
-    use_globus: false
+    globus_destination_endpoint: 1156ed9e-6984-11ea-af52-0201714f6eab
+    globus_destination_path: /n/holylabs/cgolden_lab/Lab/projects/test_tinashe/_pkgdown.yml
+    globus_source_endpoint: 1156ed9e-6984-11ea-af52-0201714f6eab
+    globus_source_path: /n/holylabs/cgolden_lab/Lab/projects/sandbox/ReaProject/MadagascarWeatherStations/_pkgdown.yml
+    globus_username: foo
+    use_globus: true

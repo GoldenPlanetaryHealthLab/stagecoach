@@ -87,7 +87,9 @@ and figure out how to get the data to the user’s specified location.
 #             "use_globus": False,
 #             "globus_username": None,
 #             "globus_source_endpoint": None,
-#             "globus_destination_endpoint": None
+#             "globus_source_path": None,
+#             "globus_destination_endpoint": None,
+#             "globus_destination_path": None
 #         }
 #     },
 #     # FILL IN THE BELOW SECTIONS WITH THE NECESSARY INFORMATION TO GET ACCESS TO THE DATA
@@ -281,6 +283,7 @@ Looks great! We now have the pieces to issue a manifest:
 ``` python
 from rich.console import Console
 from rich.panel import Panel
+from stagecoach.ui import info, success
 from sheriff.sheriff import Sheriff
 from pyprojroot import here
 
@@ -312,23 +315,17 @@ def issue_manifest(
         Whether to overwrite an existing manifest at the output path.
     """
 
-    check_citizenship(customs_sheriff)
-    console.print("[bold]Loading manifest template...[/bold]")
+    check_citizenship(customs_sheriff, console)
+    info(console, "[bold]Loading manifest template...[/bold]")
     manifest = load_template()
-    console.print("[green]✔ Template loaded[/green]\n")
+    info(console, "[green]✔ Template loaded[/green]\n")
 
     if interactive:
         manifest = fill_manifest_interactively(manifest)
 
-    write_manifest(manifest, output_path, overwrite=overwrite)
+    write_manifest(manifest, output_path, overwrite=overwrite, console=console)
 
-    console.print(
-        Panel.fit(
-            "Next step:\n[bold]stagecoach inspect[/bold]",
-            title="Ready to Ride",
-            style="bold green",
-        )
-    )
+    success(console, "Next step:\n[bold]stagecoach inspect[/bold]")
 ```
 
 Issuing a manifest writes the manifest to the file system, where the

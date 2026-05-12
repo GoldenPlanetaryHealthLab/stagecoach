@@ -1,10 +1,23 @@
 import yaml
 from stagecoach.issue_manifest import issue_manifest
 from stagecoach.manifest_checker import ManifestChecker
+from stagecoach.customs import GlobusClearance, issue_globus_transfer
+from stagecoach.checks import Severity
 from sheriff.sheriff import Sheriff
 from rich.console import Console
 from rich.panel import Panel
 from pathlib import Path
+
+from stagecoach.ui import (
+    banner,
+    success,
+    warning,
+    error,
+    info,
+    failure_panel,
+    handbook_note,
+    check_result,
+)
 
 class StageCoach:
     """
@@ -43,7 +56,8 @@ class StageCoach:
         sheriff = sheriff or self.sheriff
         console = console or self.console
         manifest_path = Path(manifest_path) if manifest_path else self.manifest_path
-        console.print(Panel.fit("🚂 Hailing the Stagecoach..", style="bold cyan"))
+        
+        banner(console, "🚂 Hailing the Stagecoach...")
 
         issue_manifest(
             customs_sheriff=sheriff,
@@ -53,55 +67,56 @@ class StageCoach:
             console=console,
         )
 
+        banner(console, f"Manifest created at: {manifest_path}. Fill it out and then run `stagecoach inspect` to check it!")
+
     def inspect(
         self,
         console: Console | None = None,
+        level: Severity = Severity.ERROR
     ) -> None:
         """Inspect a StageCoach manifest."""
 
         console = console or self.console
-        console.print(Panel.fit("📋 Inspecting the manifest...", style="bold cyan"))
-        checker = ManifestChecker(self.manifest_path)
+        banner(console, f"📋 Inspecting manifest at level: {level.value}")
+        
+        checker = ManifestChecker(self.manifest_path, level)
         checks = checker.run_all()
-
-        for result in checks:
-            if result.passed:
-                console.print(
-                    f"- [bold green]{result.name} check passed:[/bold green] "
-                    f"{result.message}"
-                )
-            else:
-                console.print(
-                    f"- [bold red]{result.name} check failed:[/bold red] "
-                    f"{result.message}"
-                )
-
-        if not checker.passes():
-            console.print("Manifest checks failed. Please review the results:")
-            console.print(
-                "- [bold red]See handbook for explanation of principles[/bold red] "
-                "https://goldenplanetaryhealthlab.github.io/01_orientation/start-here.html#the-working-philosophy"
-            )
-            raise RuntimeError("Manifest checks failed. Please review the results.")
 
         manifest = yaml.safe_load(self.manifest_path.read_text())
 
         if manifest.get("remote", {}).get("globus", {}).get("use_globus"):
-            console.print(
-                "- [bold yellow]Globus access requested. Checking with the Sheriff...[/bold yellow]"
-            )
+            info(console, "Globus access requested. Checking with customs...")
 
-            clearance = self.sheriff.issue_globus_transfer(
+            clearance = issue_globus_transfer(
                 globus_info=manifest.get("remote", {}).get("globus", {}),
                 console=console,
                 issue_transfer=False,
             )
-            if clearance:
-                console.print("- [bold green]Globus credentials validated![/bold green]")
+            if clearance.cleared:
+                success(console, "Globus credentials validated.")
             else:
-                raise RuntimeError(
-                    "Globus credentials validation failed. Please check your credentials."
+                error(
+                    console,
+                    "Globus credentials validation failed. Please check your credentials.",
                 )
+                console.print(clearance)
+
+                return False
+
+        for result in checks:
+            check_result(console, result)
+
+        if not checker.passes():
+            console.print()
+            error(console, "Manifest checks failed. Please review the results above.")
+            handbook_note(console)
+
+            return False
+        
+        console.print()
+        success(console, "Manifest checks passed.")
+        
+        return True
         
 
     def stage(self):

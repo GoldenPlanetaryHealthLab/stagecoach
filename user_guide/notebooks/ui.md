@@ -1,0 +1,94 @@
+# Aesthetic UI
+
+
+The following is a set of interchangeable UI components that will
+hopefully make it easier to standardize the look of the tools across the
+frontier.
+
+``` python
+from rich.console import Console
+from rich.markup import escape
+from rich.panel import Panel
+
+from stagecoach.checks import Severity
+
+
+HANDBOOK_URL = (
+    "https://goldenplanetaryhealthlab.github.io/"
+    "01_orientation/start-here.html#the-working-philosophy"
+)
+
+
+def banner(console: Console, message: str) -> None:
+    console.print(
+        Panel.fit(
+            message,
+            style="bold cyan",
+            border_style="cyan",
+        )
+    )
+
+
+def success(console: Console, message: str) -> None:
+    console.print(f"[bold green]✓[/bold green] {escape(message)}")
+
+
+def warning(console: Console, message: str) -> None:
+    console.print(f"[bold yellow]⚠[/bold yellow] {escape(message)}")
+
+
+def error(console: Console, message: str) -> None:
+    console.print(f"[bold red]✖[/bold red] {escape(message)}")
+
+
+def info(console: Console, message: str) -> None:
+    console.print(f"[bold cyan]•[/bold cyan] {escape(message)}")
+
+
+def failure_panel(console: Console, message: str) -> None:
+    console.print(
+        Panel.fit(
+            f"[bold red]✖[/bold red] {escape(message)}",
+            border_style="red",
+        )
+    )
+
+
+def handbook_note(console: Console) -> None:
+    console.print(
+        "[dim]See handbook for explanation of principles:[/dim] "
+        f"[link={HANDBOOK_URL}]{HANDBOOK_URL}[/link]"
+    )
+
+
+def format_principle(principle: int | list[int]) -> str:
+    if isinstance(principle, list):
+        return ", ".join(str(item) for item in principle)
+
+    return str(principle)
+
+
+def check_result(console: Console, result) -> None:
+    principle = format_principle(result.principle)
+
+    if result.state == Severity.PASS:
+        console.print(
+            f"[bold green]✓ {escape(result.name)}[/bold green] "
+            f"[dim]principle {principle}[/dim]\n"
+            f"  {escape(result.message)}"
+        )
+
+    elif result.state == Severity.WARNING:
+        console.print(
+            f"[bold yellow]⚠ {escape(result.name)}[/bold yellow] "
+            f"[dim]principle {principle}[/dim]\n"
+            f"  {escape(result.message)}"
+        )
+
+    else:
+        console.print(
+            f"[bold red]✖ {escape(result.name)}[/bold red] "
+            f"[dim]principle {principle}[/dim]\n"
+            f"  {escape(result.message)}"
+        )
+```

@@ -4,8 +4,15 @@ from enum import Enum
 from pathlib import Path
 
 class Severity(Enum):
-    ERROR = "error"
+    PASS = "pass"
     WARNING = "warning"
+    ERROR = "error"
+
+SEVERITY_RANK = {
+    Severity.PASS: 0,
+    Severity.WARNING: 1,
+    Severity.ERROR: 2,
+}
 
 PRINCIPLES = {
     1: "Remote and reproducible workflows 🌐",
@@ -20,18 +27,16 @@ class CheckResult:
     Result from a single Stagecoach manifest check.
     """
     name: str
-    passed: bool
+    state: Severity
     message: str
     principle: int | list[int]
-    severity: Severity = Severity.ERROR
 
 
 ex_check = CheckResult(
     name="Example Check",
-    passed=True,
-    message="This is an example check that passed.",
-    principle=1,
-    severity=Severity.ERROR
+    state=Severity.WARNING,
+    message="This is an example check that passed with a warning.",
+    principle=1
 )
 
 ex_check
@@ -41,33 +46,36 @@ def check_project_exists(directory: Path) -> CheckResult:
     if directory.exists() and directory.is_dir():
         return CheckResult(
             name="project_exists",
-            passed=True,
+            state=Severity.PASS,
             message=f"Project directory exists: {directory}",
             principle=1
         )
     return CheckResult(
         name="project_exists",
-        passed=False,
+        state=Severity.ERROR,
         message=f"Project directory does not exist: {directory}",
-        principle=1,
-        severity=Severity.ERROR
+        principle=1
     )
 
 def check_git_repo_exists(directory: Path) -> CheckResult:
+    """
+    Check that the project directory is a git repository.
+
+    Pass/Fail, no exceptions.
+    """
     if (directory / ".git").exists():
         return CheckResult(
             name="git_repo",
-            passed=True,
+            state=Severity.PASS,
             message="Project is under git version control.",
             principle=[1, 4]
         )
 
     return CheckResult(
         name="git_repo",
-        passed=False,
+        state=Severity.ERROR,
         message="Project must be a git repository before data can be staged.",
-        principle=[1, 4],
-        severity=Severity.ERROR
+        principle=[1, 4]
     )
 
 def check_environment_exists(directory: Path) -> CheckResult:
@@ -84,21 +92,20 @@ def check_environment_exists(directory: Path) -> CheckResult:
     if found:
         return CheckResult(
             name="environment_spec_exists",
-            passed=True,
+            state=Severity.PASS,
             message=f"Environment specification found: {', '.join(found)}",
             principle=1
         )
 
     return CheckResult(
         name="environment_spec_exists",
-        passed=False,
+        state=Severity.WARNING,
         message=(
             "Project needs a lockfile or environment specification, such as "
             "rv.lock, renv.lock, environment.yml, requirements.txt, "
             "pyproject.toml, uv.lock, or DESCRIPTION."
         ),
-        principle=1,
-        severity=Severity.ERROR
+        principle=1
     )
 
 
@@ -137,19 +144,18 @@ def check_code_exists(directory: Path) -> CheckResult:
     if files:
         return CheckResult(
             name="analysis_code_exists",
-            passed=True,
+            state=Severity.PASS,
             message=f"Found {len(files)} script or notebook file(s).",
             principle=2,
         )
 
     return CheckResult(
         name="analysis_code_exists",
-        passed=True,
+        state=Severity.WARNING,
         message=(
             "WARNING: Project must include code scripts or notebooks..."
         ),
-        principle=2,
-        severity=Severity.WARNING
+        principle=2
     )
 
 
@@ -183,41 +189,38 @@ def check_narrative_exists(directory: Path) -> CheckResult:
     if files:
         return CheckResult(
             name="notebook_exists",
-            passed=True,
+            state=Severity.PASS,
             message=f"Found {len(files)} narrated analysis file(s).",
-            principle=3,
-            severity=Severity.WARNING
+            principle=3
         )
 
     return CheckResult(
         name="notebook_exists",
-        passed=True,
+        state=Severity.WARNING,
         message=(
             "WARNING: Project should include narrated analysis using Quarto, "
             "Marimo, R Markdown, or Jupyter notebooks."
         ),
-        principle=3,
-        severity=Severity.WARNING
+        principle=3
     )
 
 def check_readme_exists(directory: Path) -> CheckResult:
-    if (directory / "README.md").exists() or (directory / "README.Rmd").exists() or (directory / "README.qmd").exists():
+    if (directory / "README.md").exists() or (directory / "README.Rmd").exists() or (directory / "README.qmd").exists() or (directory / "README").exists():
         return CheckResult(
             name="readme_exists",
-            passed=True,
-            message="README.md file exists.",
+            state=Severity.PASS,
+            message="README file found.",
             principle=3,
         )
 
     return CheckResult(
         name="readme_exists",
-        passed=False,
+        state=Severity.ERROR,
         message=(
             "Project should include a README.md file that describes the project, "
             "data sources, and analysis plan."
         ),
-        principle=3,
-        severity=Severity.WARNING
+        principle=3
     )
 
 
@@ -228,18 +231,17 @@ def check_project_structure(directory: Path) -> CheckResult:
     if has_rproj or has_src:
         return CheckResult(
             name="project_structure",
-            passed=True,
+            state=Severity.PASS,
             message="Project structure looks good.",
             principle=4,
         )
 
     return CheckResult(
         name="project_structure",
-        passed=False,
+        state=Severity.WARNING,
         message=(
             "Project should be scaffolded using an R project file, or a Python "
             "project structure with a `src` directory."
         ),
-        principle=4,
-        severity=Severity.WARNING
+        principle=4
     )
