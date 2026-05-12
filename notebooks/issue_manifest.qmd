@@ -98,6 +98,7 @@ to the user's specified location.
 # we don't export this portion of script
 # because it will cause side effects to anyone who
 # loads it at runtime
+
 # from pyprojroot import here
 # import os
 # import yaml
@@ -120,43 +121,54 @@ to the user's specified location.
 #         "governance": "governance"
 #     },
 #     # we only have two compute options for now, but this may expand in the future
-#     "remote": {
-#         "globus": {
+#     "sources": {
+#         "02_globus": {
 #             # globus credentials for ferrying data to and from the frontier; only necessary if you want to ferry data to and from the frontier via globus
 #             "use_globus": False,
 #             "globus_username": None,
 #             "globus_source_endpoint": None,
 #             "globus_source_path": None,
 #             "globus_destination_endpoint": None,
-#             "globus_destination_path": None
+#             "globus_destination_path": None,
+#             "globus_files": []
+#         },
+#         "03_dataverse": {
+#             # dataverse credentials for accessing dataverse datasets; only necessary if you want to access dataverse datasets
+#             "use_dataverse": False,
+#             "dataverse_server_url": None,
+#             "dataverse_dataset_pid": None,
+#             "dataverse_dataset_version": "latest",
+#             "dataverse_api_token_file": None,
+#             "dataverse_files": []
+#         },
+#         "01_gold_mine": {
+#             # paths to data in the gold mine; only necessary if you want to access data in the gold mine
+#             "gold_mine_paths": []
 #         }
 #     },
 #     # FILL IN THE BELOW SECTIONS WITH THE NECESSARY INFORMATION TO GET ACCESS TO THE DATA
 #     "citizen": {
-
 #         # your name must match your name in town
 #         "name": None,
-
 #         # email may be used in future for authentications
 #         "email": None
 #     },
-
 #     "project": {
 #         # this must match the name of your project repository
 #         "project_name": None,
-
 #         # must match above
 #         "project_working_dir": str(here()),
-
 #         # this is the name of the folder that stagecoach will ferry 
 #         # your input data to
 #         "input_data_dir": str(here() / "data" / "inputs"),
-
 #         # this is the name of the folder that stagecoach
 #         # will ferry your output data from;
 #         # only necessary if you want to ferry output data back to the frontier,
 #         # eg via globus
 #         "output_data_dir": str(here() / "data" / "outputs"),
+#         "intermediate_data_dir": str(here() / "data" / "intermediates"),
+#         "output_data_dir": str(here() / "data" / "outputs"),
+#         "sandbox_dir": str(here() / "sandbox")
 #     }
 # }
 
@@ -234,30 +246,37 @@ def fill_manifest_interactively(manifest: dict[str, Any]) -> dict[str, Any]:
         default=str(Path(project_working_dir) / "data" / "outputs"),
     ).ask()
 
-    use_globus = questionary.confirm(
-        "Use Globus for transport?",
-        default=False,
-    ).ask()
+    # use_globus = questionary.confirm(
+    #     "Use Globus for transport?",
+    #     default=False,
+    # ).ask()
 
-    manifest.setdefault("citizen", {})
-    manifest.setdefault("project", {})
-    manifest.setdefault("remote", {})
-    manifest["remote"].setdefault("globus", {})
+    # manifest.setdefault("citizen", {})
+    # manifest.setdefault("project", {})
+    # manifest.setdefault("source", {})
+    # manifest["source"].setdefault("globus", {})
     manifest["citizen"]["name"] = citizen_name
     manifest["citizen"]["email"] = citizen_email
     manifest["project"]["project_name"] = project_name
     manifest["project"]["project_working_dir"] = project_working_dir
     manifest["project"]["input_data_dir"] = input_data_dir
     manifest["project"]["output_data_dir"] = output_data_dir
-    manifest["remote"]["globus"]["use_globus"] = use_globus
 
-    if use_globus:
-        manifest["remote"]["globus"]["globus_username"] = questionary.text(
-            "Globus username:"
-        ).ask()
-        manifest["remote"]["globus"]["globus_endpoint"] = questionary.text(
-            "Globus endpoint:"
-        ).ask()
+    # if use_globus:
+    #     manifest["source"]["02_globus"]["globus_username"] = questionary.text(
+    #         "Globus username:"
+    #     ).ask()
+    #     manifest["source"]["02_globus"]["globus_endpoint"] = questionary.text(
+    #         "Globus endpoint:"
+    #     ).ask()
+    
+    # if use_dataverse:
+    #     manifest["source"]["03_dataverse"]["dataverse_server_url"] = questionary.text(
+    #         "Dataverse server URL:"
+    #     ).ask()
+    #     manifest["source"]["03_dataverse"]["dataverse_dataset_pid"] = questionary.text(
+    #         "Dataverse dataset PID:"
+    #     ).ask()
 
     return manifest
 ```
@@ -365,16 +384,16 @@ def issue_manifest(
     """
 
     check_citizenship(customs_sheriff, console)
-    info(console, "[bold]Loading manifest template...[/bold]")
+    info(console, "Loading manifest template...")
     manifest = load_template()
-    info(console, "[green]✔ Template loaded[/green]\n")
+    success(console, "Template loaded\n")
 
     if interactive:
         manifest = fill_manifest_interactively(manifest)
 
     write_manifest(manifest, output_path, overwrite=overwrite, console=console)
 
-    success(console, "Next step:\n[bold]stagecoach inspect[/bold]")
+    success(console, "Next step: stagecoach inspect")
 ```
 
 

@@ -185,7 +185,7 @@ the globus section of a stagecoach manifest.
 The manifest will have the following shape:
 
 ```yaml
-globus:
+02_globus:
     use_globus: true
     globus_source_endpoint: fancy-uuid
     globus_source_path: /path/on/source/endpoint

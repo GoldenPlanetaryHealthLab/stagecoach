@@ -1,5 +1,5 @@
 citizen:
-  email: ttapera@hsph.harvard.edu
+  email: ''
   name: tinashe
 frontier:
   name: golden-lab
@@ -12,14 +12,26 @@ paths:
   works: works
 project:
   input_data_dir: /n/holylabs/cgolden_lab/Lab/frontier/stagecoach/data/inputs
+  intermediate_data_dir: /n/holylabs/cgolden_lab/Lab/frontier/stagecoach/data/intermediates
   output_data_dir: /n/holylabs/cgolden_lab/Lab/frontier/stagecoach/data/outputs
   project_name: stagecoach
   project_working_dir: /n/holylabs/cgolden_lab/Lab/frontier/stagecoach
-remote:
-  globus:
-    globus_destination_endpoint: 1156ed9e-6984-11ea-af52-0201714f6eab
-    globus_destination_path: /n/holylabs/cgolden_lab/Lab/projects/test_tinashe/_pkgdown.yml
-    globus_source_endpoint: 1156ed9e-6984-11ea-af52-0201714f6eab
-    globus_source_path: /n/holylabs/cgolden_lab/Lab/projects/sandbox/ReaProject/MadagascarWeatherStations/_pkgdown.yml
-    globus_username: foo
-    use_globus: true
+  sandbox_dir: /n/holylabs/cgolden_lab/Lab/frontier/stagecoach/sandbox
+sources:
+  01_gold_mine:
+    gold_mine_paths: []
+  02_globus:
+    globus_destination_endpoint: null
+    globus_destination_path: null
+    globus_files: []
+    globus_source_endpoint: null
+    globus_source_path: null
+    globus_username: null
+    use_globus: false
+  03_dataverse:
+    dataverse_api_token_file: null
+    dataverse_dataset_pid: null
+    dataverse_dataset_version: latest
+    dataverse_files: []
+    dataverse_server_url: null
+    use_dataverse: false
