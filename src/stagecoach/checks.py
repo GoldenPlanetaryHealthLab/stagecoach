@@ -4,6 +4,18 @@ from enum import Enum
 from pathlib import Path
 
 class Severity(Enum):
+    """
+    Severity levels for manifest validation results.
+
+    Attributes
+    ----------
+    PASS : str
+        The check succeeded.
+    WARNING : str
+        The check surfaced a non-blocking issue.
+    ERROR : str
+        The check found a blocking issue.
+    """
     PASS = "pass"
     WARNING = "warning"
     ERROR = "error"
@@ -24,7 +36,18 @@ PRINCIPLES = {
 @dataclass
 class CheckResult:
     """
-    Result from a single Stagecoach manifest check.
+    Represent the outcome of a single manifest check.
+
+    Attributes
+    ----------
+    name : str
+        Stable identifier for the check.
+    state : Severity
+        Severity assigned to the check result.
+    message : str
+        Human-readable explanation of the outcome.
+    principle : int | list[int]
+        Frontier principle number, or numbers, associated with the check.
     """
     name: str
     state: Severity
@@ -43,6 +66,19 @@ ex_check
 
 
 def check_project_exists(directory: Path) -> CheckResult:
+    """
+    Verify that the project directory exists.
+
+    Parameters
+    ----------
+    directory : Path
+        Directory declared as the project working directory.
+
+    Returns
+    -------
+    CheckResult
+        Passes when ``directory`` exists and is a directory.
+    """
     if directory.exists() and directory.is_dir():
         return CheckResult(
             name="project_exists",
@@ -59,9 +95,17 @@ def check_project_exists(directory: Path) -> CheckResult:
 
 def check_git_repo_exists(directory: Path) -> CheckResult:
     """
-    Check that the project directory is a git repository.
+    Verify that the project directory is under Git version control.
 
-    Pass/Fail, no exceptions.
+    Parameters
+    ----------
+    directory : Path
+        Project directory to inspect.
+
+    Returns
+    -------
+    CheckResult
+        Passes when a ``.git`` directory is present.
     """
     if (directory / ".git").exists():
         return CheckResult(
@@ -79,6 +123,20 @@ def check_git_repo_exists(directory: Path) -> CheckResult:
     )
 
 def check_environment_exists(directory: Path) -> CheckResult:
+    """
+    Look for a project environment specification or lockfile.
+
+    Parameters
+    ----------
+    directory : Path
+        Project directory to inspect.
+
+    Returns
+    -------
+    CheckResult
+        Passes when at least one supported environment file exists and
+        warns otherwise.
+    """
     candidates = [
         "rv.lock",
         "renv.lock",
@@ -110,6 +168,20 @@ def check_environment_exists(directory: Path) -> CheckResult:
 
 
 def check_code_exists(directory: Path) -> CheckResult:
+    """
+    Check whether the project contains analysis or source code files.
+
+    Parameters
+    ----------
+    directory : Path
+        Project directory to inspect recursively.
+
+    Returns
+    -------
+    CheckResult
+        Passes when at least one supported code or notebook file is found
+        outside ignored directories.
+    """
     patterns = [
         "**/*.py",
         "**/*.R",
@@ -160,6 +232,20 @@ def check_code_exists(directory: Path) -> CheckResult:
 
 
 def check_narrative_exists(directory: Path) -> CheckResult:
+    """
+    Check whether the project contains narrated analysis notebooks.
+
+    Parameters
+    ----------
+    directory : Path
+        Project directory to inspect recursively.
+
+    Returns
+    -------
+    CheckResult
+        Passes when Quarto, R Markdown, or Jupyter notebooks are present
+        outside ignored directories.
+    """
 
     patterns = [
         "**/*.qmd",
@@ -205,6 +291,20 @@ def check_narrative_exists(directory: Path) -> CheckResult:
     )
 
 def check_readme_exists(directory: Path) -> CheckResult:
+    """
+    Check whether the project contains a top-level README document.
+
+    Parameters
+    ----------
+    directory : Path
+        Project directory to inspect.
+
+    Returns
+    -------
+    CheckResult
+        Passes when a supported README filename exists and errors
+        otherwise.
+    """
     if (directory / "README.md").exists() or (directory / "README.Rmd").exists() or (directory / "README.qmd").exists() or (directory / "README").exists():
         return CheckResult(
             name="readme_exists",
@@ -225,6 +325,20 @@ def check_readme_exists(directory: Path) -> CheckResult:
 
 
 def check_project_structure(directory: Path) -> CheckResult:
+    """
+    Check for a minimal project scaffold.
+
+    Parameters
+    ----------
+    directory : Path
+        Project directory to inspect.
+
+    Returns
+    -------
+    CheckResult
+        Passes when the project contains either an R project file or a
+        Python-style ``src`` directory.
+    """
     has_rproj = (directory / "project.Rproj").exists()
     has_src = (directory / "src").exists() and (directory / "src").is_dir()
 

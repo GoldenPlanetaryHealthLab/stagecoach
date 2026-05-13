@@ -26,7 +26,6 @@ directories for data usage:
 
 ```{python}
 import os
-import re
 import glob
 from pathlib import Path
 from stagecoach.ui import info, error, success, warning
@@ -36,7 +35,22 @@ from rich.console import Console
 ```{python}
 def create_stage_directories(manifest: dict, console: Console, gitignore=True):
     """
-    Create the stage directories if they don't exist. 
+    Create the standard Stagecoach data directories.
+
+    Parameters
+    ----------
+    manifest : dict
+        Manifest containing the ``project`` directory configuration.
+    console : Console
+        Rich console used for progress messages.
+    gitignore : bool, default=True
+        Whether to create a minimal ``.gitignore`` file in each directory.
+
+    Raises
+    ------
+    ValueError
+        Raised when one or more required project directories are missing
+        from the manifest.
     """
     
     input_dir = manifest.get("project", {}).get("input_data_dir")
@@ -79,6 +93,20 @@ from typing import Any
 
 @dataclass
 class StageResult:
+    """
+    Summarize the result of a staging operation.
+
+    Attributes
+    ----------
+    source : str
+        Source identifier, such as ``01_gold_mine`` or ``02_globus``.
+    staged : bool
+        Whether the staging operation completed successfully.
+    message : str, default=""
+        Human-readable summary of the outcome.
+    details : dict[str, Any]
+        Source-specific metadata about the staging attempt.
+    """
     source: str
     staged: bool
     message: str = ""
@@ -91,7 +119,7 @@ we just need to call the appropriate functions.
 
 ```{python}
 from stagecoach.customs import (
-    Clearance, 
+
     check_globus_clearance, 
     build_globus_transfer,
     globus_transfer_client,
@@ -103,9 +131,29 @@ def stage_data_from_globus(
     manifest: dict,
     console: Console,
     issue_transfer: bool = True
-) -> bool:
+) -> StageResult:
     """
-    Stage data from Globus based on the manifest.
+    Submit a Globus transfer for manifest-declared items.
+
+    Parameters
+    ----------
+    manifest : dict
+        Manifest containing the ``02_globus`` source configuration.
+    console : Console
+        Rich console used for progress messages.
+    issue_transfer : bool, default=True
+        Whether to submit the transfer after validating access.
+
+    Returns
+    -------
+    StageResult
+        Summary of the Globus staging attempt.
+
+    Raises
+    ------
+    ValueError
+        Raised when the manifest does not define the required Globus
+        source information.
     """
 
     if not issue_transfer:
@@ -149,14 +197,25 @@ def stage_data_from_globus(
 Next we implement symlink staging via FASRC:
 
 ```{python}
-from pathlib import Path
-import glob
-import os
-
 def stage_data_from_fasrc(
     manifest: dict,
     console: Console,
 ) -> StageResult:
+    """
+    Stage Gold Mine data by creating symlinks on FASRC.
+
+    Parameters
+    ----------
+    manifest : dict
+        Manifest containing the ``01_gold_mine`` source configuration.
+    console : Console
+        Rich console used for progress messages.
+
+    Returns
+    -------
+    StageResult
+        Summary of symlink creation outcomes for all requested items.
+    """
     fasrc_info = manifest.get("sources", {}).get("01_gold_mine", {})
     items = fasrc_info.get("items", [])
 
@@ -165,6 +224,16 @@ def stage_data_from_fasrc(
         "failed": [],
         "skipped": [],
     }
+
+    clearance = check_gold_mine_clearance(fasrc_info)
+    
+    if not clearance.cleared:
+        return StageResult(
+            source="01_gold_mine",
+            staged=False,
+            message=f"Gold Mine clearance failed: {clearance.message}",
+            details=task_list
+        )
 
     if not items:
         return StageResult(
@@ -253,5 +322,3 @@ def stage_data_from_fasrc(
 
 That should do it for now! We will implement the dataverse staging
 later on.
-
-

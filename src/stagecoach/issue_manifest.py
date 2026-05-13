@@ -2,7 +2,21 @@ from rich.console import Console
 from sheriff.sheriff import Sheriff
 
 def check_citizenship(customs_sheriff: Sheriff, console: Console) -> None:
-    """Validate Frontier citizenship using the Sheriff."""
+    """
+    Validate Frontier citizenship through the sheriff.
+
+    Parameters
+    ----------
+    customs_sheriff : Sheriff
+        Sheriff instance used to verify citizenship.
+    console : Console
+        Rich console used for progress messages.
+
+    Raises
+    ------
+    RuntimeError
+        Raised when the sheriff does not validate the current user.
+    """
 
     info(console, "Checking citizenship...")
 
@@ -126,7 +140,14 @@ from typing import Any
 from importlib.resources import files
 
 def load_template() -> dict[str, Any]:
-    """Load the packaged Stagecoach manifest template."""
+    """
+    Load the packaged Stagecoach manifest template.
+
+    Returns
+    -------
+    dict[str, Any]
+        Parsed manifest template bundled with the package.
+    """
 
     template_path = files("stagecoach.templates").joinpath("manifest.yml")
     return yaml.safe_load(template_path.read_text())
@@ -136,8 +157,19 @@ import questionary
 from typing import Any
 
 def fill_manifest_interactively(manifest: dict[str, Any]) -> dict[str, Any]:
+    """
+    Prompt the user for manifest values at the command line.
 
-    """Prompt the user and fill in manifest fields."""
+    Parameters
+    ----------
+    manifest : dict[str, Any]
+        Manifest template to populate in place.
+
+    Returns
+    -------
+    dict[str, Any]
+        Updated manifest containing the collected user input.
+    """
 
     citizen_name = questionary.text(
         "Citizen name (Your name as it appears in Town):"
@@ -202,7 +234,6 @@ def fill_manifest_interactively(manifest: dict[str, Any]) -> dict[str, Any]:
 # filled_manifest = fill_manifest_interactively(mymanifest)
 
 
-import questionary
 from pathlib import Path
 from rich.console import Console
 
@@ -212,7 +243,25 @@ def write_manifest(
     console: Console,
     overwrite: bool = False
     ) -> None:
-    """Write a manifest to disk."""
+    """
+    Write a manifest to disk as YAML.
+
+    Parameters
+    ----------
+    manifest : dict[str, Any]
+        Manifest data to serialize.
+    output_path : str | Path
+        Destination path for the YAML file.
+    console : Console
+        Rich console used for progress messages.
+    overwrite : bool, default=False
+        Whether to bypass the overwrite confirmation prompt.
+
+    Raises
+    ------
+    RuntimeError
+        Raised when the target file exists and overwrite is declined.
+    """
 
     output_path = Path(output_path)
 
@@ -246,7 +295,6 @@ def write_manifest(
 
 
 from rich.console import Console
-from rich.panel import Panel
 from stagecoach.ui import info, success
 from sheriff.sheriff import Sheriff
 from pyprojroot import here
@@ -260,23 +308,25 @@ def issue_manifest(
 ) -> None:
 
     """
-    Generate a Stagecoach manifest.
-    This function validates Frontier citizenship, loads a template manifest,
-    optionally fills it interactively, and writes the result to disk.
+    Generate a Stagecoach manifest for a project.
 
     Parameters
     ----------
-    customs_sheriff
+    customs_sheriff : Sheriff
         Sheriff instance used to validate Frontier citizenship.
-
-    interactive
+    console : Console
+        Rich console used for progress messages.
+    interactive : bool, default=True
         Whether to prompt the user for manifest fields.
-
-    output_path
+    output_path : str | Path, default=here() / "stagecoach_manifest.yml"
         Destination path for the generated manifest.
-    
-    overwrite
+    overwrite : bool, default=False
         Whether to overwrite an existing manifest at the output path.
+
+    Returns
+    -------
+    None
+        This function is called for its side effect of writing the manifest.
     """
 
     check_citizenship(customs_sheriff, console)

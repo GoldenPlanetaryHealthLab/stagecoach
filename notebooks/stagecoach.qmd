@@ -70,12 +70,11 @@ the data to the user.
 import yaml
 from stagecoach.issue_manifest import issue_manifest
 from stagecoach.manifest_checker import ManifestChecker
-from stagecoach.customs import Clearance, check_globus_clearance, build_globus_transfer
 from stagecoach.checks import Severity
+from stagecoach.customs import check_gold_mine_clearance, check_globus_clearance
 from stagecoach.stage import create_stage_directories, stage_data_from_fasrc, stage_data_from_globus, StageResult
 from sheriff.sheriff import Sheriff
 from rich.console import Console
-from rich.panel import Panel
 from pathlib import Path
 
 from stagecoach.ui import (
@@ -91,7 +90,16 @@ from stagecoach.ui import (
 
 class StageCoach:
     """
-    Orchestrate Stagecoach workflows.
+    Orchestrate manifest issuance, inspection, and data staging.
+
+    Parameters
+    ----------
+    sheriff : Sheriff | None, default=None
+        Sheriff instance used for identity and policy checks.
+    manifest_path : str | Path, default="stagecoach_manifest.yml"
+        Path to the manifest used by instance methods.
+    console : Console | None, default=None
+        Rich console used for user-facing output.
 
     Methods
     -------
@@ -122,7 +130,27 @@ class StageCoach:
         console: Console | None = None,
         manifest_path: str | Path | None = None,
     ) -> bool:
-        """Create a StageCoach manifest."""
+        """
+        Create a manifest for a new Stagecoach workflow.
+
+        Parameters
+        ----------
+        interactive : bool, default=True
+            Whether to prompt for manifest fields interactively.
+        overwrite : bool, default=False
+            Whether to overwrite an existing manifest file.
+        sheriff : Sheriff | None, default=None
+            Optional sheriff override for this invocation.
+        console : Console | None, default=None
+            Optional console override for this invocation.
+        manifest_path : str | Path | None, default=None
+            Optional manifest destination override.
+
+        Returns
+        -------
+        bool
+            ``True`` when manifest creation completes successfully.
+        """
         sheriff = sheriff or self.sheriff
         console = console or self.console
         manifest_path = Path(manifest_path) if manifest_path else self.manifest_path
@@ -148,7 +176,22 @@ class StageCoach:
         console: Console | None = None,
         level: Severity = Severity.ERROR
     ) -> bool:
-        """Inspect a StageCoach manifest."""
+        """
+        Validate a manifest and report any blocking issues.
+
+        Parameters
+        ----------
+        console : Console | None, default=None
+            Optional console override for this invocation.
+        level : Severity, default=Severity.ERROR
+            Minimum severity that should cause inspection to fail.
+
+        Returns
+        -------
+        bool
+            ``True`` when the manifest passes all checks at the requested
+            severity threshold.
+        """
 
         console = console or self.console
         banner(console, f"📋 Inspecting manifest at level: {level.value}")
@@ -165,11 +208,18 @@ class StageCoach:
         if manifest.get("sources", {}).get("01_gold_mine", {}).get("enabled"):
             info(console, "Gold Mine access requested. Checking with customs...")
             gold_mine_info = manifest.get("sources", {}).get("01_gold_mine", {})
-            gold_mine_items = gold_mine_info.get("items", [])
-            for item in gold_mine_items:
-                item_name = item.get("name", "Unnamed Item")
-                item_path = item.get("path_regex", "No path provided")
-                # if not Path(item_path).exists() or 
+            clearance = check_gold_mine_clearance(gold_mine_info)
+
+            if clearance.cleared:
+                success(console, "Gold Mine access cleared by customs.")
+            else:
+                error(
+                    console,
+                    "Gold Mine access clearance failed. Please check your access and try again.",
+                )
+                console.print(clearance)
+                raise ValueError("Gold Mine access clearance failed.")
+                
 
         # check globus
         if manifest.get("sources", {}).get("02_globus", {}).get("enabled"):
@@ -197,7 +247,7 @@ class StageCoach:
 
         if not checker.passes():
             console.print()
-            banner(console, "⚠️ Manifest checks failed. Please review the results above.")
+            failure_panel(console, "⚠️ Manifest checks failed. Please review the results above.")
             handbook_note(console)
 
             return False
@@ -212,8 +262,19 @@ class StageCoach:
         self,
         console: Console | None = None,
     ) -> bool:
-        
-        """Stage data according to a StageCoach manifest."""
+        """
+        Stage data declared by the instance manifest.
+
+        Parameters
+        ----------
+        console : Console | None, default=None
+            Optional console override for this invocation.
+
+        Returns
+        -------
+        bool
+            ``True`` when every requested source stages successfully.
+        """
         console = console or self.console
         banner(console, "🚂 Staging the data...")
 
@@ -267,7 +328,7 @@ class StageCoach:
         else:
             error(console, "Some data sources failed to stage. Please review the messages above and address any issues in your manifest.")
 
-            banner(console, "⚠️ Staging failed. Please try again.")
+            failure_panel(console, "⚠️ Staging failed. Please try again.")
             return False
 
 ```
@@ -275,4 +336,3 @@ class StageCoach:
 Click on each section below to learn how stagecoach works in more detail, and to see examples of how to use it.
 
 1. [Manifest File](#manifest-file)
-

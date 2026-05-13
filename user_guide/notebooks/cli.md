@@ -15,11 +15,10 @@ Here’s the code for the CLI. First, hailing the stagecoach:
 from pathlib import Path
 from enum import Enum
 from rich.console import Console
-from rich.panel import Panel
 from typing import Annotated
 from sheriff.sheriff import Sheriff
 from stagecoach.stagecoach import StageCoach
-from stagecoach.checks import Severity, PRINCIPLES
+from stagecoach.checks import Severity
 from stagecoach.ui import failure_panel
 import typer
 
@@ -29,6 +28,16 @@ app = typer.Typer(
 )
 
 class FailureLevel(str, Enum):
+    """
+    Severity thresholds exposed by the CLI.
+
+    Attributes
+    ----------
+    WARNING : str
+        Treat warnings as command failures.
+    ERROR : str
+        Treat only errors as command failures.
+    """
     WARNING = "warning"
     ERROR = "error"
 
@@ -53,6 +62,15 @@ def hail(
 ) -> None:
     """
     Create a Stagecoach manifest.
+
+    Parameters
+    ----------
+    interactive : bool, default=True
+        Whether to prompt for manifest fields interactively.
+    output_path : Path, default=Path("stagecoach_manifest.yml")
+        Destination path for the generated manifest.
+    overwrite : bool, default=False
+        Whether to overwrite an existing manifest file.
     """
 
     console = Console()
@@ -97,6 +115,13 @@ def inspect(
 ) -> None:
     """
     Inspect a Stagecoach manifest.
+
+    Parameters
+    ----------
+    manifest_path : Path, default=Path("stagecoach_manifest.yml")
+        Path to the manifest to validate.
+    level : FailureLevel, default=FailureLevel.ERROR
+        Minimum severity that should cause the command to exit with failure.
     """
 
     console = Console()
@@ -123,6 +148,14 @@ And, staging:
 ``` python
 @app.command()
 def stage():
+    """
+    Stage data declared by the manifest.
+
+    Returns
+    -------
+    None
+        The command exits with a nonzero status when staging fails.
+    """
     console = Console()
     customs_sheriff = Sheriff(console)
     staged = StageCoach(

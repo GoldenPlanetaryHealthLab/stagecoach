@@ -12,6 +12,14 @@ from contextlib import contextmanager
 
 @contextmanager
 def globus_transfer_client():
+    """
+    Yield an authenticated Globus transfer client.
+
+    Yields
+    ------
+    TransferClient
+        Transfer client configured for the Frontier Stagecoach app.
+    """
     with UserApp(
         "Frontier-Stagecoach",
         client_id="7723dff4-fa63-4639-903b-ba6541e24e98",
@@ -23,12 +31,22 @@ def globus_transfer_client():
 
 from dataclasses import dataclass, field
 from typing import Any
-from rich.console import Console
 
 @dataclass
 class Clearance:
     """
-    Result of a Stagecoach source access check.
+    Represent the outcome of a source access check.
+
+    Attributes
+    ----------
+    source : str
+        Source identifier being validated.
+    cleared : bool
+        Whether access validation succeeded.
+    message : str, default=""
+        Human-readable summary of the validation result.
+    details : dict[str, Any]
+        Source-specific metadata captured during validation.
     """
     
     source: str
@@ -39,6 +57,19 @@ class Clearance:
 def check_globus_clearance(
     globus_info: dict
     ) -> Clearance:
+    """
+    Validate access to Globus endpoints and requested source paths.
+
+    Parameters
+    ----------
+    globus_info : dict
+        Manifest subsection describing Globus endpoints and staged items.
+
+    Returns
+    -------
+    Clearance
+        Clearance result describing whether Globus access checks passed.
+    """
     try:
         with globus_transfer_client() as client:
             client.get_endpoint(globus_info["source_endpoint"])
@@ -76,6 +107,26 @@ def build_globus_transfer(
     globus_info: dict,
     clearance: Clearance
     ) -> TransferData:
+    """
+    Build a Globus transfer request from manifest settings.
+
+    Parameters
+    ----------
+    globus_info : dict
+        Manifest subsection describing Globus endpoints and staged items.
+    clearance : Clearance
+        Successful clearance result for the same Globus configuration.
+
+    Returns
+    -------
+    TransferData
+        Transfer request populated with all requested items.
+
+    Raises
+    ------
+    ValueError
+        Raised when ``clearance`` indicates that access checks failed.
+    """
     if not clearance.cleared:
         raise ValueError(f"Cannot build transfer: clearance failed with message: {clearance.message}")
     transfer = TransferData(
@@ -95,10 +146,26 @@ def build_globus_transfer(
 
 
 import glob
+import os
+from pathlib import Path
 
 def check_gold_mine_clearance(
     gold_mine_info: dict
     ) -> Clearance:
+    """
+    Validate readability of requested Gold Mine paths on FASRC.
+
+    Parameters
+    ----------
+    gold_mine_info : dict
+        Manifest subsection describing Gold Mine staging items.
+
+    Returns
+    -------
+    Clearance
+        Clearance result describing whether all required paths were found
+        and were readable.
+    """
 
     try:
         items = gold_mine_info.get("items", [])
