@@ -31,7 +31,6 @@ sources:
     items:
     - name: example_globus_item
       source_path: "/n/holylabs/cgolden_lab/Lab/projects/era5_database/era5_sandbox/notes"
-      destination_path: "/n/holylabs/LABS/cgolden_lab/Lab/frontier/stagecoach/data/inputs/inst"
       files_regex: ["*.ipynb"]
       recursive: true
       required: true

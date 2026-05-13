@@ -126,11 +126,15 @@ def stage_data_from_globus(
         )
 
     globus_info = manifest.get("sources", {}).get("02_globus", {})
+    input_root = Path(manifest["project"]["input_data_dir"])
+    source_root = input_root / "02_globus"
+    source_root.mkdir(parents=True, exist_ok=True)
+
     if not globus_info:
         error(console, "No Globus information found in the manifest.")
         raise ValueError("Globus information is missing from the manifest.")
     clearance = check_globus_clearance(globus_info)
-    transfer = build_globus_transfer(globus_info, clearance)
+    transfer = build_globus_transfer(manifest, clearance, fix_holylabs=True, label = manifest.get("project", {}).get("project_name", "stagecoach_transfer"))
     try:
         with globus_transfer_client() as client:
             client.get_endpoint(globus_info["source_endpoint"])

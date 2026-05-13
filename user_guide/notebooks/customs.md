@@ -219,8 +219,10 @@ is built mostly on what we learned above:
 
 ``` python
 def build_globus_transfer(
-    globus_info: dict,
-    clearance: Clearance
+    manifest: dict,
+    clearance: Clearance,
+    fix_holylabs: bool = True,
+    label: str = "Stagecoach transfer",
     ) -> TransferData:
     """
     Build a Globus transfer request from manifest settings.
@@ -231,6 +233,10 @@ def build_globus_transfer(
         Manifest subsection describing Globus endpoints and staged items.
     clearance : Clearance
         Successful clearance result for the same Globus configuration.
+    fix_holylabs : bool, default=True
+        Whether to apply Holylabs-specific path fix to the transfer (removes redundant LAB segment from paths).
+    label: str, optional
+        Optional label for the transfer task.
 
     Returns
     -------
@@ -242,18 +248,29 @@ def build_globus_transfer(
     ValueError
         Raised when ``clearance`` indicates that access checks failed.
     """
+    globus_info = manifest.get("sources", {}).get("02_globus", {})
+
+    if not globus_info:
+        raise ValueError("Globus information is missing from the manifest.")
+
     if not clearance.cleared:
         raise ValueError(f"Cannot build transfer: clearance failed with message: {clearance.message}")
+    
     transfer = TransferData(
         source_endpoint=globus_info["source_endpoint"],
         destination_endpoint=globus_info["destination_endpoint"],
-        label="Stagecoach transfer",
+        label=label,
     )
 
     for item in globus_info["items"]:
+        
+        source_path = item["source_path"].replace("/n/holylabs/LABS/", "/n/holylabs/") if fix_holylabs else item["source_path"]
+        destination_root = manifest["project"]["input_data_dir"].replace("/n/holylabs/LABS/", "/n/holylabs/") if fix_holylabs else manifest["project"]["input_data_dir"]
+        destination_path = Path(destination_root) / "02_globus" / item['name'] / Path(source_path).name
+        
         transfer.add_item(
-            item["source_path"],
-            item["destination_path"],
+            str(source_path),
+            str(destination_path),
             recursive=item.get("recursive", True),
         )
 

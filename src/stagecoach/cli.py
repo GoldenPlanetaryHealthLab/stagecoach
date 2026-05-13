@@ -127,7 +127,14 @@ def inspect(
 
 
 @app.command()
-def stage():
+def stage(
+    manifest_path: Path = typer.Option(
+        Path("stagecoach_manifest.yml"),
+        "--manifest",
+        "-m",
+        help="Path to the manifest to inspect.",
+        )
+    ):
     """
     Stage data declared by the manifest.
 
@@ -141,6 +148,7 @@ def stage():
     staged = StageCoach(
         sheriff=customs_sheriff,
         console=console,
+        manifest_path=manifest_path
     ).stage()
     if not staged:
         raise typer.Exit(code=1)
