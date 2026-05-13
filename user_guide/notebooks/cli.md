@@ -9,6 +9,8 @@ Once the CLI is defined as “hailing” the stagecoach, stagecoach will run
 `issue_manifest` to create the manifest, and then proceed with the rest
 of the stagecoach.
 
+Here’s the code for the CLI. First, hailing the stagecoach:
+
 ``` python
 from pathlib import Path
 from enum import Enum
@@ -71,6 +73,8 @@ def hail(
         raise typer.Exit(code=1)
 ```
 
+Inspecting the manifest:
+
 ``` python
 @app.command()
 def inspect(
@@ -114,12 +118,19 @@ def inspect(
         raise typer.Exit(code=1)
 ```
 
+And, staging:
+
 ``` python
 @app.command()
 def stage():
     console = Console()
     customs_sheriff = Sheriff(console)
-    pass
+    staged = StageCoach(
+        sheriff=customs_sheriff,
+        console=console,
+    ).stage()
+    if not staged:
+        raise typer.Exit(code=1)
 ```
 
 ``` python

@@ -1,98 +1,155 @@
+# import yaml
+# from pathlib import Path
+# from pprint import pprint
+# from pyprojroot import here
+
+# manifest = yaml.safe_load(Path(here() / "stagecoach_manifest.yml").read_text())
+# pprint(manifest['sources'])
+
+
+from globus_sdk import GlobusAppConfig, TransferClient, UserApp, TransferData
+from contextlib import contextmanager
+
+@contextmanager
+def globus_transfer_client():
+    with UserApp(
+        "Frontier-Stagecoach",
+        client_id="7723dff4-fa63-4639-903b-ba6541e24e98",
+        config=GlobusAppConfig(auto_redrive_gares=True),
+    ) as app:
+        with TransferClient(app=app) as client:
+            yield client
+
+
+from dataclasses import dataclass, field
+from typing import Any
 from rich.console import Console
-from globus_sdk import GlobusAppConfig, UserApp, TransferClient, GlobusAPIError, TransferData
-from dataclasses import dataclass
 
 @dataclass
-class GlobusClearance:
-    transfer_id : dict | None
-    source_collection: str | None
-    destination_collection: str | None
+class Clearance:
+    """
+    Result of a Stagecoach source access check.
+    """
+    
+    source: str
     cleared: bool
+    message: str = ""
+    details: dict[str, Any] = field(default_factory=dict)
 
-def issue_globus_transfer(
-    globus_info: dict,
-    console: Console,
-    stagecoach_app_id: str = "7723dff4-fa63-4639-903b-ba6541e24e98",
-    issue_transfer: bool = False
-    ) -> GlobusClearance:
-    """
-    Use the Globus SDK to validate globus credentials and optionally issue a transfer.
-    Args:
-        globus_info (dict): A dictionary containing the globus credentials and information.
-        console (Console): Rich console object for output messages.
-        stagecoach_app_id (str): The Globus application client ID for authentication.
-        issue_transfer (bool): Whether to actually issue a transfer after validation. Defaults to False.
-    Returns:
-        GlobusClearance: A dataclass indicating the validation result and associated objects.
-    """
+def check_globus_clearance(
+    globus_info: dict
+    ) -> Clearance:
     try:
-        
-        if not globus_info.get("use_globus", False):
-            console.print("Globus access not requested.")
-            return GlobusClearance(
-                transfer_id = None,
-                source_collection = None,
-                destination_collection = None,
-                cleared = True
+        with globus_transfer_client() as client:
+            client.get_endpoint(globus_info["source_endpoint"])
+            client.get_endpoint(globus_info["destination_endpoint"])
+            for item in globus_info["items"]:
+                client.operation_stat(
+                    globus_info["source_endpoint"],
+                    path=item["source_path"],
+                )
+
+        return Clearance(
+            source="02_globus",
+            cleared=True, 
+            message="Globus clearance passed.",
+            details={
+                    "source_endpoint": globus_info["source_endpoint"],
+                    "destination_endpoint": globus_info["destination_endpoint"],
+                    "items_checked": len(globus_info["items"])
+                }
             )
-        
-        app_name = "Frontier-Customs_" + globus_info.get("globus_username", "Globus-Validator")
 
-        with UserApp(
-            app_name,
-            client_id=stagecoach_app_id,
-            config=GlobusAppConfig(auto_redrive_gares=True),
-        ) as app:
-            with TransferClient(app=app) as client:
-                src_collection = globus_info.get("globus_source_endpoint")
-                dst_collection = globus_info.get("globus_destination_endpoint")
-                src_path = globus_info.get("globus_source_path")
-                dst_path = globus_info.get("globus_destination_path")
+    except Exception as exc:
+        return Clearance(
+            source="02_globus",
+            cleared=False,
+            message=str(exc),
+            details={
+                "source_endpoint": globus_info.get("source_endpoint"),
+                "destination_endpoint": globus_info.get("destination_endpoint"),
+            }
+        )
 
-                client.add_app_data_access_scope(src_collection)
-                client.add_app_data_access_scope(dst_collection)
-                
-                transfer_request = TransferData(src_collection, dst_collection)
-                transfer_request.add_item(src_path, dst_path)
-                
-                # Attempt to stat the source collection to validate access
-                resp = client.operation_stat(src_collection, src_path)
-                if resp.http_status == 200:
-                    console.print("✅ Globus credentials validated successfully.")
-                else:
-                    console.print(f"❌ Failed to validate globus credentials. Operation stat returned status: {resp.http_status}")
-                    raise GlobusAPIError(resp)
 
-                if issue_transfer:
-                    task = client.submit_transfer(transfer_request)
-                    console.print(f"Submitted transfer. Task ID: {task['task_id']}.")
-                    return GlobusClearance(
-                        transfer_id = task,
-                        source_collection = src_collection,
-                        destination_collection = dst_collection,
-                        cleared = True
+def build_globus_transfer(
+    globus_info: dict,
+    clearance: Clearance
+    ) -> TransferData:
+    if not clearance.cleared:
+        raise ValueError(f"Cannot build transfer: clearance failed with message: {clearance.message}")
+    transfer = TransferData(
+        source_endpoint=globus_info["source_endpoint"],
+        destination_endpoint=globus_info["destination_endpoint"],
+        label="Stagecoach transfer",
+    )
+
+    for item in globus_info["items"]:
+        transfer.add_item(
+            item["source_path"],
+            item["destination_path"],
+            recursive=item.get("recursive", True),
+        )
+
+    return transfer
+
+
+import glob
+
+def check_gold_mine_clearance(
+    gold_mine_info: dict
+    ) -> Clearance:
+
+    try:
+        items = gold_mine_info.get("items", [])
+        checked = []
+
+        for item in items:
+            name = item.get("name", "unnamed")
+            path_regex = item.get("path_regex")
+
+            if not path_regex:
+                return Clearance(
+                    source="01_gold_mine",
+                    cleared=False,
+                    message=f"{name}: missing path_regex",
+                )
+
+            matches = [Path(p) for p in glob.glob(path_regex)]
+
+            if not matches and item.get("required", True):
+                return Clearance(
+                    source="01_gold_mine",
+                    cleared=False,
+                    message=f"{name}: no matches for {path_regex}",
+                )
+
+            for match in matches:
+                if not os.access(match, os.R_OK):
+                    return Clearance(
+                        source="01_gold_mine",
+                        cleared=False,
+                        message=f"{name}: path is not readable: {match}",
                     )
-                else:
-                    return GlobusClearance(
-                        transfer_id = None,
-                        source_collection = src_collection,
-                        destination_collection = dst_collection,
-                        cleared = True
-                    )
 
-    except GlobusAPIError as e:
-        console.print_exception()
-        return GlobusClearance(
-            transfer_id = None,
-            source_collection = globus_info.get("globus_source_endpoint", None),
-            destination_collection = globus_info.get("globus_destination_endpoint", None),
-            cleared = False
-        )  # Return False if there's an API error, along with a clearance object indicating failure
-    except Exception as e:
-        console.print_exception()
-        return GlobusClearance(
-            transfer_id = None,
-            source_collection = globus_info.get("globus_source_endpoint", None),
-            destination_collection = globus_info.get("globus_destination_endpoint", None),
-            cleared = False
-        )  # Return False for any other unexpected errors, along with a clearance object indicating failure
+            checked.append(
+                {
+                    "name": name,
+                    "path_regex": path_regex,
+                    "matches": [str(p) for p in matches],
+                }
+            )
+
+        return Clearance(
+            source="01_gold_mine",
+            cleared=True,
+            message="Gold Mine clearance passed.",
+            details={"items_checked": checked},
+        )
+
+    except Exception as exc:
+        return Clearance(
+            source="01_gold_mine",
+            cleared=False,
+            message=str(exc),
+        )

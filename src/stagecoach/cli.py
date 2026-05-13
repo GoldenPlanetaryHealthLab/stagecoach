@@ -105,7 +105,12 @@ def inspect(
 def stage():
     console = Console()
     customs_sheriff = Sheriff(console)
-    pass
+    staged = StageCoach(
+        sheriff=customs_sheriff,
+        console=console,
+    ).stage()
+    if not staged:
+        raise typer.Exit(code=1)
 
 
 if __name__ == "__main__":
