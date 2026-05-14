@@ -150,7 +150,12 @@ def build_globus_transfer(
     for item in globus_info["items"]:
         
         source_path = item["source_path"].replace("/n/holylabs/LABS/", "/n/holylabs/") if fix_holylabs else item["source_path"]
-        destination_root = manifest["project"]["input_data_dir"].replace("/n/holylabs/LABS/", "/n/holylabs/") if fix_holylabs else manifest["project"]["input_data_dir"]
+        
+        if item.get("destination_path", None):
+            destination_root = item["destination_path"]
+        else:
+            destination_root = manifest["project"]["input_data_dir"]
+        destination_root = destination_root.replace("/n/holylabs/LABS/", "/n/holylabs/") if fix_holylabs else manifest["project"]["input_data_dir"]
         destination_path = Path(destination_root) / "02_globus" / item['name'] / Path(source_path).name
         
         transfer.add_item(
