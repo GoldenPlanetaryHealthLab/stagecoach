@@ -54,6 +54,11 @@ def hail(
         "-o",
         help="Where to write the manifest.",
     ),
+    outpost: bool = typer.Option(
+        False,
+        "--outpost/--no-outpost",
+        help="Whether to create a temporary mock Frontier citizenship scaffold for manifest creation outside the assigned Frontier.",
+    ),
     overwrite: bool = typer.Option(
         False,
         "--overwrite/--no-overwrite",
@@ -84,6 +89,7 @@ def hail(
         ).hail(
             interactive=interactive,
             overwrite=overwrite,
+            outpost=outpost
         )
 
     except Exception as exc:

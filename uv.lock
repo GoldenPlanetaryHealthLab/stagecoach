@@ -1727,10 +1727,9 @@ wheels = [
 
 [[package]]
 name = "sheriff"
-version = "0.1.2"
-source = { git = "https://github.com/GoldenPlanetaryHealthLab/sheriff.git?rev=v0.1.2#8ce66b626ed2d23dc8e9909b0114d90d19ba6797" }
+version = "0.1.1"
+source = { git = "https://github.com/GoldenPlanetaryHealthLab/sheriff.git?rev=v0.1.1#491af8005d20b9ea6d5c0df58226e504107aac41" }
 dependencies = [
-    { name = "globus-sdk" },
     { name = "great-docs" },
     { name = "ipykernel" },
     { name = "jupyter" },
@@ -1779,6 +1778,7 @@ version = "0.1.0"
 source = { editable = "." }
 dependencies = [
     { name = "dataclasses" },
+    { name = "globus-sdk" },
     { name = "pyprojroot" },
     { name = "pyyaml" },
     { name = "questionary" },
@@ -1790,11 +1790,12 @@ dependencies = [
 [package.metadata]
 requires-dist = [
     { name = "dataclasses", specifier = ">=0.8" },
+    { name = "globus-sdk", specifier = ">=4.5.0" },
     { name = "pyprojroot", specifier = ">=0.3.0" },
     { name = "pyyaml", specifier = ">=6.0.3" },
     { name = "questionary", specifier = ">=2.1.1" },
     { name = "rich", specifier = ">=15.0.0" },
-    { name = "sheriff", git = "https://github.com/GoldenPlanetaryHealthLab/sheriff.git?rev=v0.1.2" },
+    { name = "sheriff", git = "https://github.com/GoldenPlanetaryHealthLab/sheriff.git?rev=v0.1.1" },
     { name = "typer", specifier = ">=0.25.1" },
 ]
 

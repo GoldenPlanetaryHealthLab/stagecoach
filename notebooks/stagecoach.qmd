@@ -68,6 +68,8 @@ the data to the user.
 #| sorting-hat: keep
 
 import yaml
+from contextlib import nullcontext
+from stagecoach.outpost import create_outpost
 from stagecoach.issue_manifest import issue_manifest
 from stagecoach.manifest_checker import ManifestChecker
 from stagecoach.checks import Severity
@@ -129,6 +131,7 @@ class StageCoach:
         sheriff: Sheriff | None = None,
         console: Console | None = None,
         manifest_path: str | Path | None = None,
+        outpost: bool = False,
     ) -> bool:
         """
         Create a manifest for a new Stagecoach workflow.
@@ -145,6 +148,9 @@ class StageCoach:
             Optional console override for this invocation.
         manifest_path : str | Path | None, default=None
             Optional manifest destination override.
+        outpost : bool, default=False
+            Whether to create a temporary mock Frontier citizenship scaffold for
+            manifest creation outside the assigned Frontier.
 
         Returns
         -------
@@ -159,13 +165,26 @@ class StageCoach:
 
         banner(console, "The stagecoach manifest is a YAML file that describes the data sources for your project and how to access them. You can create a manifest interactively, or stagecoach will provide a template manifest and you will fill in the details. The manifest will also include information about the data dependencies for your project, and how to access those dependencies.")
 
-        issue_manifest(
-            customs_sheriff=sheriff,
-            interactive=interactive,
-            output_path=manifest_path,
-            overwrite=overwrite,
-            console=console,
-        )
+        if outpost:
+
+            banner(
+                console,
+                "Using Outpost mode for manifest creation. ⛺"
+                "Stagecoach will create a temporary mock Frontier file for the "
+                "citizenship check, allowing the Stagecoach to "
+                "ferry the data to a fictional Frontier."
+            )
+
+        outpost = create_outpost() if outpost else nullcontext()
+
+        with outpost:
+            issue_manifest(
+                customs_sheriff=sheriff,
+                interactive=interactive,
+                output_path=manifest_path,
+                overwrite=overwrite,
+                console=console,
+            )
 
         banner(console, f"✅ Manifest created at: {manifest_path}. Fill it out and then run `stagecoach inspect` to check it!")
 
