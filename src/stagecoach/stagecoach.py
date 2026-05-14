@@ -241,6 +241,12 @@ class StageCoach:
                 success(console, "Gold Mine data staged successfully.")
             else:
                 error(console, f"Gold Mine staging failed: {fasrc_stageresult.message}")
+        else:
+            fasrc_stageresult = StageResult(
+                source="01_gold_mine",
+                staged=True,
+                message="Gold Mine staging not requested.",
+            )
         
         # globus
         globus = manifest.get("sources", {}).get("02_globus", {})
@@ -250,6 +256,12 @@ class StageCoach:
                 success(console, "Globus data staged successfully.")
             else:
                 error(console, f"Globus staging failed: {globus_stageresult.message}")
+        else:
+            globus_stageresult = StageResult(
+                source="02_globus",
+                staged=True,
+                message="Globus staging not requested.",
+            )
 
         # dataverse
         dataverse = manifest.get("sources", {}).get("03_dataverse", {})
