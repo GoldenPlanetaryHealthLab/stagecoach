@@ -35,7 +35,7 @@ with the following command:
 
 ```bash
 # by using tool install, you get this tool available as a command line tool
-uv tool install  https://github.com/GoldenPlanetaryHealthLab/stagecoach/tree/2-Stage-Data
+uv tool install git+https://github.com/GoldenPlanetaryHealthLab/stagecoach.git@2-Stage-Data
 ```
 
 ## Usage
