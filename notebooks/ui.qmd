@@ -39,6 +39,16 @@ HANDBOOK_URL = (
 
 
 def banner(console: Console, message: str) -> None:
+    """
+    Render a highlighted banner message.
+
+    Parameters
+    ----------
+    console : Console
+        Rich console used for output.
+    message : str
+        Message to display inside the banner panel.
+    """
     console.print(
         Panel.fit(
             message,
@@ -49,22 +59,72 @@ def banner(console: Console, message: str) -> None:
 
 
 def success(console: Console, message: str) -> None:
+    """
+    Render a success message.
+
+    Parameters
+    ----------
+    console : Console
+        Rich console used for output.
+    message : str
+        Message body to print.
+    """
     console.print(f"[bold green]✓[/bold green] {escape(message)}")
 
 
 def warning(console: Console, message: str) -> None:
+    """
+    Render a warning message.
+
+    Parameters
+    ----------
+    console : Console
+        Rich console used for output.
+    message : str
+        Message body to print.
+    """
     console.print(f"[bold yellow]⚠[/bold yellow] {escape(message)}")
 
 
 def error(console: Console, message: str) -> None:
+    """
+    Render an error message.
+
+    Parameters
+    ----------
+    console : Console
+        Rich console used for output.
+    message : str
+        Message body to print.
+    """
     console.print(f"[bold red]✖[/bold red] {escape(message)}")
 
 
 def info(console: Console, message: str) -> None:
+    """
+    Render an informational message.
+
+    Parameters
+    ----------
+    console : Console
+        Rich console used for output.
+    message : str
+        Message body to print.
+    """
     console.print(f"[bold cyan]•[/bold cyan] {escape(message)}")
 
 
 def failure_panel(console: Console, message: str) -> None:
+    """
+    Render an error message inside a bordered panel.
+
+    Parameters
+    ----------
+    console : Console
+        Rich console used for output.
+    message : str
+        Message body to print.
+    """
     console.print(
         Panel.fit(
             f"[bold red]✖[/bold red] {escape(message)}",
@@ -74,6 +134,14 @@ def failure_panel(console: Console, message: str) -> None:
 
 
 def handbook_note(console: Console) -> None:
+    """
+    Print a link to the Frontier handbook principles.
+
+    Parameters
+    ----------
+    console : Console
+        Rich console used for output.
+    """
     console.print(
         "[dim]See handbook for explanation of principles:[/dim] "
         f"[link={HANDBOOK_URL}]{HANDBOOK_URL}[/link]"
@@ -81,6 +149,19 @@ def handbook_note(console: Console) -> None:
 
 
 def format_principle(principle: int | list[int]) -> str:
+    """
+    Format one or more principle identifiers for display.
+
+    Parameters
+    ----------
+    principle : int | list[int]
+        Principle number or collection of principle numbers.
+
+    Returns
+    -------
+    str
+        Comma-separated principle identifiers.
+    """
     if isinstance(principle, list):
         return ", ".join(str(item) for item in principle)
 
@@ -88,6 +169,17 @@ def format_principle(principle: int | list[int]) -> str:
 
 
 def check_result(console: Console, result) -> None:
+    """
+    Render a manifest check result using severity-specific styling.
+
+    Parameters
+    ----------
+    console : Console
+        Rich console used for output.
+    result
+        Object with ``name``, ``state``, ``message``, and ``principle``
+        attributes, typically a ``CheckResult`` instance.
+    """
     principle = format_principle(result.principle)
 
     if result.state == Severity.PASS:

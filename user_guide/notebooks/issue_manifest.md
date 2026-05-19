@@ -27,9 +27,23 @@ from rich.console import Console
 from sheriff.sheriff import Sheriff
 
 def check_citizenship(customs_sheriff: Sheriff, console: Console) -> None:
-    """Validate Frontier citizenship using the Sheriff."""
+    """
+    Validate Frontier citizenship through the sheriff.
 
-    console.print("[bold]Checking citizenship...[/bold]")
+    Parameters
+    ----------
+    customs_sheriff : Sheriff
+        Sheriff instance used to verify citizenship.
+    console : Console
+        Rich console used for progress messages.
+
+    Raises
+    ------
+    RuntimeError
+        Raised when the sheriff does not validate the current user.
+    """
+
+    info(console, "Checking citizenship...")
 
     if not customs_sheriff.check_citizen():
         raise RuntimeError(
@@ -37,7 +51,7 @@ def check_citizenship(customs_sheriff: Sheriff, console: Console) -> None:
             "Please check your citizenship and try again."
         )
 
-    console.print("[green]✔ Citizenship verified[/green]\n")
+    success(console, "Citizenship verified")
 ```
 
 We can see this function in action below:
@@ -59,74 +73,102 @@ and figure out how to get the data to the user’s specified location.
 # we don't export this portion of script
 # because it will cause side effects to anyone who
 # loads it at runtime
+
 # from pyprojroot import here
-# import os
-# import yaml
 
-# manifest = {
+# manifest_template = {
 #     "frontier": {
-#         # the name of the frontier may be used in future
 #         "name": "golden-lab",
-#         # the version may be used in future
 #         "schema_version": 1.0,
-
-#         # critical: we must know where the frontier starts
-#         "root": "/n/holylabs/cgolden_lab/Lab/frontier"
+#         "root": "/n/holylabs/cgolden_lab/Lab/frontier",
 #     },
+
 #     "paths": {
-#         # this is the general structure of the frontier
 #         "goldmine": "goldmine",
 #         "works": "works",
 #         "town": "town",
-#         "governance": "governance"
+#         "governance": "governance",
 #     },
-#     # we only have two compute options for now, but this may expand in the future
-#     "remote": {
-#         "globus": {
-#             # globus credentials for ferrying data to and from the frontier; only necessary if you want to ferry data to and from the frontier via globus
-#             "use_globus": False,
-#             "globus_username": None,
-#             "globus_source_endpoint": None,
-#             "globus_source_path": None,
-#             "globus_destination_endpoint": None,
-#             "globus_destination_path": None
-#         }
-#     },
-#     # FILL IN THE BELOW SECTIONS WITH THE NECESSARY INFORMATION TO GET ACCESS TO THE DATA
+
 #     "citizen": {
-
-#         # your name must match your name in town
 #         "name": None,
-
-#         # email may be used in future for authentications
-#         "email": None
+#         "email": None,
 #     },
 
 #     "project": {
-#         # this must match the name of your project repository
 #         "project_name": None,
-
-#         # must match above
 #         "project_working_dir": str(here()),
-
-#         # this is the name of the folder that stagecoach will ferry 
-#         # your input data to
 #         "input_data_dir": str(here() / "data" / "inputs"),
-
-#         # this is the name of the folder that stagecoach
-#         # will ferry your output data from;
-#         # only necessary if you want to ferry output data back to the frontier,
-#         # eg via globus
+#         "intermediate_data_dir": str(here() / "data" / "intermediates"),
 #         "output_data_dir": str(here() / "data" / "outputs"),
-#     }
+#         "sandbox_dir": str(here() / "sandbox"),
+#     },
+
+#     "sources": {
+#         "01_gold_mine": {
+#             "enabled": False,
+
+#             # Each item stages into:
+#             # <input_data_dir>/01_gold_mine/<name>/<basename>
+#             "items": [
+#                 {
+#                     "name": "example_goldmine_item",
+#                     "path_regex": None,
+#                     "required": True,
+#                 }
+#             ],
+#         },
+
+#         "02_globus": {
+#             "enabled": False,
+
+#             # Globus collection UUIDs
+#             "source_endpoint": None,
+#             "destination_endpoint": None,
+
+#             # Each item stages into:
+#             # <input_data_dir>/02_globus/<name>/<basename>
+#             "items": [
+#                 {
+#                     "name": "example_globus_item",
+#                     "source_path": None,
+#                     "destination_path": None,  # optional override
+#                     "files_regex": [],
+#                     "recursive": True,
+#                     "required": True,
+#                 }
+#             ],
+#         },
+
+#         "03_dataverse": {
+#             "enabled": False,
+
+#             "server_url": None,
+#             "dataset_pid": None,
+#             "dataset_version": "latest",
+#             "api_token_file": None,
+
+#             # Each item stages into:
+#             # <input_data_dir>/03_dataverse/<name>/<basename>
+#             "items": [
+#                 {
+#                     "name": "example_dataverse_item",
+#                     "files_regex": [],
+#                     "required": True,
+#                 }
+#             ],
+#         },
+#     },
 # }
 
-# yaml_manifest = yaml.dump(manifest)
+# import yaml
+# from pathlib import Path
 
-# output_path = here() / "src" / "stagecoach" / "templates" / "manifest.yml"
+# output_path = Path("src/stagecoach/templates/manifest.yml")
+# output_path.parent.mkdir(parents=True, exist_ok=True)
 
-# with open(output_path, "w") as f:
-#     f.write(yaml_manifest)
+# with output_path.open("w") as f:
+#     yaml.dump(manifest_template, f, sort_keys=False)
 ```
 
 If a citizen can pass the citizenship check, then the stagecoach can
@@ -141,7 +183,14 @@ from typing import Any
 from importlib.resources import files
 
 def load_template() -> dict[str, Any]:
-    """Load the packaged Stagecoach manifest template."""
+    """
+    Load the packaged Stagecoach manifest template.
+
+    Returns
+    -------
+    dict[str, Any]
+        Parsed manifest template bundled with the package.
+    """
 
     template_path = files("stagecoach.templates").joinpath("manifest.yml")
     return yaml.safe_load(template_path.read_text())
@@ -167,8 +216,19 @@ import questionary
 from typing import Any
 
 def fill_manifest_interactively(manifest: dict[str, Any]) -> dict[str, Any]:
+    """
+    Prompt the user for manifest values at the command line.
 
-    """Prompt the user and fill in manifest fields."""
+    Parameters
+    ----------
+    manifest : dict[str, Any]
+        Manifest template to populate in place.
+
+    Returns
+    -------
+    dict[str, Any]
+        Updated manifest containing the collected user input.
+    """
 
     citizen_name = questionary.text(
         "Citizen name (Your name as it appears in Town):"
@@ -193,30 +253,37 @@ def fill_manifest_interactively(manifest: dict[str, Any]) -> dict[str, Any]:
         default=str(Path(project_working_dir) / "data" / "outputs"),
     ).ask()
 
-    use_globus = questionary.confirm(
-        "Use Globus for transport?",
-        default=False,
-    ).ask()
+    # use_globus = questionary.confirm(
+    #     "Use Globus for transport?",
+    #     default=False,
+    # ).ask()
 
-    manifest.setdefault("citizen", {})
-    manifest.setdefault("project", {})
-    manifest.setdefault("remote", {})
-    manifest["remote"].setdefault("globus", {})
+    # manifest.setdefault("citizen", {})
+    # manifest.setdefault("project", {})
+    # manifest.setdefault("source", {})
+    # manifest["source"].setdefault("globus", {})
     manifest["citizen"]["name"] = citizen_name
     manifest["citizen"]["email"] = citizen_email
     manifest["project"]["project_name"] = project_name
     manifest["project"]["project_working_dir"] = project_working_dir
     manifest["project"]["input_data_dir"] = input_data_dir
     manifest["project"]["output_data_dir"] = output_data_dir
-    manifest["remote"]["globus"]["use_globus"] = use_globus
 
-    if use_globus:
-        manifest["remote"]["globus"]["globus_username"] = questionary.text(
-            "Globus username:"
-        ).ask()
-        manifest["remote"]["globus"]["globus_endpoint"] = questionary.text(
-            "Globus endpoint:"
-        ).ask()
+    # if use_globus:
+    #     manifest["source"]["02_globus"]["globus_username"] = questionary.text(
+    #         "Globus username:"
+    #     ).ask()
+    #     manifest["source"]["02_globus"]["globus_endpoint"] = questionary.text(
+    #         "Globus endpoint:"
+    #     ).ask()
+    
+    # if use_dataverse:
+    #     manifest["source"]["03_dataverse"]["dataverse_server_url"] = questionary.text(
+    #         "Dataverse server URL:"
+    #     ).ask()
+    #     manifest["source"]["03_dataverse"]["dataverse_dataset_pid"] = questionary.text(
+    #         "Dataverse dataset PID:"
+    #     ).ask()
 
     return manifest
 ```
@@ -232,7 +299,6 @@ In practice, this process looks like:
 Next, writing the manifest should be straight forward:
 
 ``` python
-import questionary
 from pathlib import Path
 from rich.console import Console
 
@@ -242,7 +308,25 @@ def write_manifest(
     console: Console,
     overwrite: bool = False
     ) -> None:
-    """Write a manifest to disk."""
+    """
+    Write a manifest to disk as YAML.
+
+    Parameters
+    ----------
+    manifest : dict[str, Any]
+        Manifest data to serialize.
+    output_path : str | Path
+        Destination path for the YAML file.
+    console : Console
+        Rich console used for progress messages.
+    overwrite : bool, default=False
+        Whether to bypass the overwrite confirmation prompt.
+
+    Raises
+    ------
+    RuntimeError
+        Raised when the target file exists and overwrite is declined.
+    """
 
     output_path = Path(output_path)
 
@@ -256,12 +340,12 @@ def write_manifest(
             raise RuntimeError(f"Manifest not written: {output_path} already exists.")
 
     output_path.parent.mkdir(parents=True, exist_ok=True)
-    console.print(f"[bold]Writing manifest to:[/bold] {output_path}")
+    info(console, f"Writing manifest to: {output_path}")
     with console.status("[bold green]Saving manifest..."):
         with output_path.open("w") as f:
             yaml.dump(manifest, f, sort_keys=False)
 
-    console.print("[green]✔ Manifest created successfully[/green]\n")
+    success(console, "Manifest created successfully")
 ```
 
 To test:
@@ -282,7 +366,6 @@ Looks great! We now have the pieces to issue a manifest:
 
 ``` python
 from rich.console import Console
-from rich.panel import Panel
 from stagecoach.ui import info, success
 from sheriff.sheriff import Sheriff
 from pyprojroot import here
@@ -296,36 +379,38 @@ def issue_manifest(
 ) -> None:
 
     """
-    Generate a Stagecoach manifest.
-    This function validates Frontier citizenship, loads a template manifest,
-    optionally fills it interactively, and writes the result to disk.
+    Generate a Stagecoach manifest for a project.
 
     Parameters
     ----------
-    customs_sheriff
+    customs_sheriff : Sheriff
         Sheriff instance used to validate Frontier citizenship.
-
-    interactive
+    console : Console
+        Rich console used for progress messages.
+    interactive : bool, default=True
         Whether to prompt the user for manifest fields.
-
-    output_path
+    output_path : str | Path, default=here() / "stagecoach_manifest.yml"
         Destination path for the generated manifest.
-    
-    overwrite
+    overwrite : bool, default=False
         Whether to overwrite an existing manifest at the output path.
+
+    Returns
+    -------
+    None
+        This function is called for its side effect of writing the manifest.
     """
 
     check_citizenship(customs_sheriff, console)
-    info(console, "[bold]Loading manifest template...[/bold]")
+    info(console, "Loading manifest template...")
     manifest = load_template()
-    info(console, "[green]✔ Template loaded[/green]\n")
+    success(console, "Template loaded\n")
 
     if interactive:
         manifest = fill_manifest_interactively(manifest)
 
     write_manifest(manifest, output_path, overwrite=overwrite, console=console)
 
-    success(console, "Next step:\n[bold]stagecoach inspect[/bold]")
+    success(console, "Next step: stagecoach inspect")
 ```
 
 Issuing a manifest writes the manifest to the file system, where the

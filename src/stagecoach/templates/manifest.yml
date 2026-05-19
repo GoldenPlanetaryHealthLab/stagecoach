@@ -1,25 +1,47 @@
-citizen:
-  email: null
-  name: null
 frontier:
   name: golden-lab
-  root: /n/holylabs/cgolden_lab/Lab/frontier
   schema_version: 1.0
+  root: /n/holylabs/cgolden_lab/Lab/frontier
 paths:
   goldmine: goldmine
-  governance: governance
-  town: town
   works: works
+  town: town
+  governance: governance
+citizen:
+  name: null
+  email: null
 project:
-  input_data_dir: /n/holylabs/cgolden_lab/Lab/frontier/stagecoach/data/inputs
-  output_data_dir: /n/holylabs/cgolden_lab/Lab/frontier/stagecoach/data/outputs
   project_name: null
   project_working_dir: /n/holylabs/cgolden_lab/Lab/frontier/stagecoach
-remote:
-  globus:
-    globus_destination_endpoint: null
-    globus_destination_path: null
-    globus_source_endpoint: null
-    globus_source_path: null
-    globus_username: null
-    use_globus: false
+  input_data_dir: /n/holylabs/cgolden_lab/Lab/frontier/stagecoach/data/inputs
+  intermediate_data_dir: /n/holylabs/cgolden_lab/Lab/frontier/stagecoach/data/intermediates
+  output_data_dir: /n/holylabs/cgolden_lab/Lab/frontier/stagecoach/data/outputs
+  sandbox_dir: /n/holylabs/cgolden_lab/Lab/frontier/stagecoach/sandbox
+sources:
+  01_gold_mine:
+    enabled: false
+    items:
+    - name: example_goldmine_item
+      path_regex: null
+      required: true
+  02_globus:
+    enabled: false
+    source_endpoint: null
+    destination_endpoint: null
+    items:
+    - name: example_globus_item
+      source_path: null
+      destination_path: null
+      files_regex: []
+      recursive: true
+      required: true
+  03_dataverse:
+    enabled: false
+    server_url: null
+    dataset_pid: null
+    dataset_version: latest
+    api_token_file: null
+    items:
+    - name: example_dataverse_item
+      files_regex: []
+      required: true
