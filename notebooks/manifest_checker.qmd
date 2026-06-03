@@ -16,6 +16,7 @@ extensions:
     script-links-position: "none"
 
 format: gfm
+guide-section: "For Developers: `stagecoach` Internals"
 ---
 
 Here's a manifest checker class that performs various checks on a project 

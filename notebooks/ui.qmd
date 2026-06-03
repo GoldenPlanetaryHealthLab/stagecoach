@@ -18,6 +18,7 @@ extensions:
 params:
     export: true
 format: gfm
+guide-section: "For Developers: `stagecoach` Internals"
 ---
 
 The following is a set of interchangeable UI components

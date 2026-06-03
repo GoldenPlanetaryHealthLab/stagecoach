@@ -33,6 +33,7 @@ def check_citizenship(customs_sheriff: Sheriff, console: Console) -> None:
 #         "name": "golden-lab",
 #         # the version may be used in future
 #         "schema_version": 1.0,
+#         "stagecoach_version": 0.1,
 
 #         # critical: we must know where the frontier starts
 #         "root": "/n/holylabs/cgolden_lab/Lab/frontier"

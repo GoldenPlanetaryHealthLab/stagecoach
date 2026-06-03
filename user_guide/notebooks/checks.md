@@ -284,7 +284,7 @@ project using an R project file, or a Python project structure with a
 
 ``` python
 def check_project_structure(directory: Path) -> CheckResult:
-    has_rproj = (directory / "project.Rproj").exists()
+    has_rproj = (directory / "*.Rproj").exists()
     has_src = (directory / "src").exists() and (directory / "src").is_dir()
 
     if has_rproj or has_src:
