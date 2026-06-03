@@ -14,10 +14,23 @@ from stagecoach.checks import *
 
 class ManifestChecker:
     """
-    Check whether a project directory satisfies minimum Frontier expectations.
-    The checker is intentionally lightweight.
-    Each check returns a structured result that Stagecoach can display
-    nicely in `stagecoach inspect`.
+    Run the standard Stagecoach manifest checks for a project.
+
+    Parameters
+    ----------
+    manifest_file : str | Path
+        Path to the manifest file that defines the project directory.
+    severity_level : Severity
+        Minimum severity that should cause ``passes`` to return ``False``.
+
+    Attributes
+    ----------
+    manifest : dict
+        Parsed manifest contents.
+    project_dir : str
+        Project working directory declared by the manifest.
+    severity_level : Severity
+        Failure threshold used by ``passes``.
     """
     def __init__(self, manifest_file: str | Path, severity_level: Severity):
         self.manifest =  yaml.safe_load(Path(manifest_file).read_text())
@@ -26,7 +39,12 @@ class ManifestChecker:
 
     def run_all(self) -> list[CheckResult]:
         """
-        Run all manifest checks.
+        Run all configured project checks.
+
+        Returns
+        -------
+        list[CheckResult]
+            Results from each Stagecoach project validation check.
         """
 
         return [
@@ -41,11 +59,13 @@ class ManifestChecker:
 
     def passes(self) -> bool:
         """
-        Return True if no check result is at or above the configured
-        severity threshold.
+        Determine whether the manifest passes the configured threshold.
 
-        If severity_level is Severity.ERROR, warnings are allowed.
-        If severity_level is Severity.WARNING, warnings and errors fail.
+        Returns
+        -------
+        bool
+            ``True`` when every check result falls below
+            ``self.severity_level`` and ``False`` otherwise.
         """
 
         results = self.run_all()

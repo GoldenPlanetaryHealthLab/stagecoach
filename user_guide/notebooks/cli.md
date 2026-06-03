@@ -9,15 +9,16 @@ Once the CLI is defined as “hailing” the stagecoach, stagecoach will run
 `issue_manifest` to create the manifest, and then proceed with the rest
 of the stagecoach.
 
+Here’s the code for the CLI. First, hailing the stagecoach:
+
 ``` python
 from pathlib import Path
 from enum import Enum
 from rich.console import Console
-from rich.panel import Panel
 from typing import Annotated
 from sheriff.sheriff import Sheriff
 from stagecoach.stagecoach import StageCoach
-from stagecoach.checks import Severity, PRINCIPLES
+from stagecoach.checks import Severity
 from stagecoach.ui import failure_panel
 import typer
 
@@ -27,6 +28,16 @@ app = typer.Typer(
 )
 
 class FailureLevel(str, Enum):
+    """
+    Severity thresholds exposed by the CLI.
+
+    Attributes
+    ----------
+    WARNING : str
+        Treat warnings as command failures.
+    ERROR : str
+        Treat only errors as command failures.
+    """
     WARNING = "warning"
     ERROR = "error"
 
@@ -43,6 +54,11 @@ def hail(
         "-o",
         help="Where to write the manifest.",
     ),
+    outpost: bool = typer.Option(
+        False,
+        "--outpost/--no-outpost",
+        help="Whether to create a temporary mock Frontier citizenship scaffold for manifest creation outside the assigned Frontier.",
+    ),
     overwrite: bool = typer.Option(
         False,
         "--overwrite/--no-overwrite",
@@ -51,6 +67,15 @@ def hail(
 ) -> None:
     """
     Create a Stagecoach manifest.
+
+    Parameters
+    ----------
+    interactive : bool, default=True
+        Whether to prompt for manifest fields interactively.
+    output_path : Path, default=Path("stagecoach_manifest.yml")
+        Destination path for the generated manifest.
+    overwrite : bool, default=False
+        Whether to overwrite an existing manifest file.
     """
 
     console = Console()
@@ -64,12 +89,15 @@ def hail(
         ).hail(
             interactive=interactive,
             overwrite=overwrite,
+            outpost=outpost
         )
 
     except Exception as exc:
         failure_panel(console, str(exc))
         raise typer.Exit(code=1)
 ```
+
+Inspecting the manifest:
 
 ``` python
 @app.command()
@@ -93,6 +121,13 @@ def inspect(
 ) -> None:
     """
     Inspect a Stagecoach manifest.
+
+    Parameters
+    ----------
+    manifest_path : Path, default=Path("stagecoach_manifest.yml")
+        Path to the manifest to validate.
+    level : FailureLevel, default=FailureLevel.ERROR
+        Minimum severity that should cause the command to exit with failure.
     """
 
     console = Console()
@@ -114,12 +149,35 @@ def inspect(
         raise typer.Exit(code=1)
 ```
 
+And, staging:
+
 ``` python
 @app.command()
-def stage():
+def stage(
+    manifest_path: Path = typer.Option(
+        Path("stagecoach_manifest.yml"),
+        "--manifest",
+        "-m",
+        help="Path to the manifest to inspect.",
+        )
+    ):
+    """
+    Stage data declared by the manifest.
+
+    Returns
+    -------
+    None
+        The command exits with a nonzero status when staging fails.
+    """
     console = Console()
     customs_sheriff = Sheriff(console)
-    pass
+    staged = StageCoach(
+        sheriff=customs_sheriff,
+        console=console,
+        manifest_path=manifest_path
+    ).stage()
+    if not staged:
+        raise typer.Exit(code=1)
 ```
 
 ``` python

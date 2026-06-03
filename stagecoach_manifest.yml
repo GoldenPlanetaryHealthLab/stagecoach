@@ -1,25 +1,46 @@
-citizen:
-  email: ttapera@hsph.harvard.edu
-  name: tinashe
 frontier:
   name: golden-lab
-  root: /n/holylabs/cgolden_lab/Lab/frontier
   schema_version: 1.0
+  root: /n/holylabs/cgolden_lab/Lab/frontier
 paths:
   goldmine: goldmine
-  governance: governance
-  town: town
   works: works
+  town: town
+  governance: governance
+citizen:
+  name: tinashe
+  email: ttapera@hsph.harvard.edu
 project:
-  input_data_dir: /n/holylabs/cgolden_lab/Lab/frontier/stagecoach/data/inputs
-  output_data_dir: /n/holylabs/cgolden_lab/Lab/frontier/stagecoach/data/outputs
   project_name: stagecoach
-  project_working_dir: /n/holylabs/cgolden_lab/Lab/frontier/stagecoach
-remote:
-  globus:
-    globus_destination_endpoint: 1156ed9e-6984-11ea-af52-0201714f6eab
-    globus_destination_path: /n/holylabs/cgolden_lab/Lab/projects/test_tinashe/_pkgdown.yml
-    globus_source_endpoint: 1156ed9e-6984-11ea-af52-0201714f6eab
-    globus_source_path: /n/holylabs/cgolden_lab/Lab/projects/sandbox/ReaProject/MadagascarWeatherStations/_pkgdown.yml
-    globus_username: foo
-    use_globus: true
+  project_working_dir: /n/holylabs/LABS/cgolden_lab/Lab/frontier/stagecoach
+  input_data_dir: /n/holylabs/LABS/cgolden_lab/Lab/frontier/stagecoach/data/inputs
+  intermediate_data_dir: /n/holylabs/LABS/cgolden_lab/Lab/frontier/stagecoach/data/intermediates
+  output_data_dir: /n/holylabs/LABS/cgolden_lab/Lab/frontier/stagecoach/data/outputs
+  sandbox_dir: /n/holylabs/LABS/cgolden_lab/Lab/frontier/stagecoach/sandbox
+sources:
+  01_gold_mine:
+    enabled: true
+    items:
+    - name: example_goldmine_item
+      path_regex: "/n/holylabs/cgolden_lab/Lab/frontier/gold_mine/01_ore/golden_googledrive_rclone/CLTN/4. Datasets/Data"
+      required: true
+  02_globus:
+    enabled: true
+    source_endpoint: "1156ed9e-6984-11ea-af52-0201714f6eab"
+    destination_endpoint: "1156ed9e-6984-11ea-af52-0201714f6eab"
+    items:
+    - name: example_globus_item
+      source_path: "/n/holylabs/cgolden_lab/Lab/projects/era5_database/era5_sandbox/notes"
+      files_regex: ["*.ipynb"]
+      recursive: true
+      required: true
+  03_dataverse:
+    enabled: false
+    server_url: null
+    dataset_pid: null
+    dataset_version: latest
+    api_token_file: null
+    items:
+    - name: example_dataverse_item
+      files_regex: []
+      required: true
