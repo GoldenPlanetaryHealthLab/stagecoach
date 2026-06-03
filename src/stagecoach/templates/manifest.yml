@@ -1,7 +1,8 @@
 frontier:
   name: golden-lab
-  schema_version: 1.0
   root: /n/holylabs/cgolden_lab/Lab/frontier
+  schema_version: 0.1
+  stagecoach_version: 0.1
 paths:
   goldmine: goldmine
   works: works

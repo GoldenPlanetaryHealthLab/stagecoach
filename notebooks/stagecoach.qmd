@@ -17,6 +17,7 @@ extensions:
 params:
   export: true
 format: gfm
+guide-section: "For Users: `stagecoach` Explained"
 ---
 
 The stagecoach is a data ferrying system that automagically configures

@@ -325,21 +325,7 @@ def check_readme_exists(directory: Path) -> CheckResult:
 
 
 def check_project_structure(directory: Path) -> CheckResult:
-    """
-    Check for a minimal project scaffold.
-
-    Parameters
-    ----------
-    directory : Path
-        Project directory to inspect.
-
-    Returns
-    -------
-    CheckResult
-        Passes when the project contains either an R project file or a
-        Python-style ``src`` directory.
-    """
-    has_rproj = (directory / "project.Rproj").exists()
+    has_rproj = (directory / "*.Rproj").exists()
     has_src = (directory / "src").exists() and (directory / "src").is_dir()
 
     if has_rproj or has_src:

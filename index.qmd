@@ -3,6 +3,151 @@ title: "StageCoach"
 subtitle: "A manifest-driven CLI for staging authorized data dependencies into reproducible local or remote working environments."
 ---
 
-## Quarto
+## Staging Data with StageCoach
 
-Quarto enables you to weave together content and executable code into a finished document. To learn more about Quarto see <https://quarto.org>.
+`staging` is the process of preparing data for use in a working project
+environment. This can often involve downloading, transforming, unzipping,
+and otherwise manipulating data to get it into a format that is ready for use in
+Python or R. Many data scientists often overlook the staging process,
+rushing into analysis and machine learning without properly documenting
+what data they are using, where it came from, and when it was sourced. This leads
+to projects that lack modularity and reproducibility, and can make it difficult to 
+share work with others.
+
+To remedy this, we introduce `stagecoach`, a manifest-driven CLI for staging authorized 
+data dependencies into reproducible local or remote working environments. With 
+`stagecoach`, you can define a manifest that specifies the data dependencies for your 
+project, and then use the CLI to stage those dependencies into your working 
+environment. This ensures that your data sourcing procedure is properly documented and 
+reproducible, and makes it easier to share your work with others.
+
+::: {.callout-tip collapse="true"}
+## The `stagecoach` chugs along, ferrying precious cargo throughout The Frontier...
+
+All across the Frontier, a familiar rumble can be heard and felt through the land.
+The `stagecoach` is arriving! Designed specifically to carry precious scientific
+cargo, the `stagecoach` is the trusted vehicle to get data from the Gold Mine into
+your hands. Need to start a new project? Hail the `stagecoach`, and prepare
+your data request in the digital manifest. But be warned, the stagecoach
+is a bit old-fashioned, and requires strict project setups and 
+clearance from the Sheriff before your data can be delivered to you. 
+The Sheriff is a stickler for the rules, and will only 
+allow data to be delivered if you're registered in the town records.
+
+As you hand your manifest to the stagecoach pilot, his brow furrows — you haven't
+set up your project space for optimal reproducibility! The pilot is a 
+seasoned veteran of the Frontier, and knows what can happen if you don't
+follow best practices for data management. He will refuse to take your
+manifest if your project is malformed, and instruct you on how to
+fix it before you can get your data delivered. Once your manifest is 
+in order, the `stagecoach` will head deep into the Frontier mines,
+fetch your data, and return it to you in a reproducible working environment,
+ready for analysis and machine learning.
+:::
+
+## PreRequisites
+
+To get registered on the town record in The Frontier, simply add
+the line below to your `.bashrc` file. This `.bashrc` file is a 
+script every user has that  runs every time you open a new 
+terminal session. It is used to set up your environment, 
+including special variables and aliases.
+
+```
+vim ~/.bashrc
+
+# add the following line to the bottom of the file
+FRONTIER=/n/holylabs/LABS/cgolden_lab/Lab/frontier
+
+#save + exit vim by typing :wq (colon, then w, then q) and hitting enter
+```
+
+Then, source your `.bashrc` file:
+```
+source ~/.bashrc
+```
+See [here](https://docs.rc.fas.harvard.edu/kb/editing-your-bashrc/)
+and [here](https://www.freecodecamp.org/news/bashrc-customization-guide/) for 
+more information on how to modify your bashrc. We will be using
+`.bashrc` and other variants of shell configuration for numerous fun 
+and productive purposes on The Frontier, so it's worth getting 
+familiar with how to use it now.
+
+## How to Use `stagecoach`
+
+Stagecoach is a Python tool available as a CLI. We recommend
+using `uv` as your **user level** package manager to manage 
+**project-agnostic CLI tools**[^2] like `stagecoach`, as 
+this will prevent conflicts with whatever 
+version of Python and dependencies you have in specific projects 
+and their respective dependencies. 
+To install `uv`, follow the instructions in the [uv documentation](https://docs.astral.sh/uv/).
+
+```
+curl -LsSf https://astral.sh/uv/install.sh | sh
+```
+
+### Install
+
+Then, when you have initiated your project, create a new virtual environment for your project using `uv`:
+
+```
+cd /n/holylabs/LABS/cgolden_lab/Lab/frontier/town/<MY TOWN SPACE>/<my-project>
+
+uv init --bare  # use bare to initialize a minimal python project
+
+uv venv
+```
+
+Then, install `stagecoach` to your _user-level_, _project-specific_ environment with `uv tool install`:
+
+```
+uv tool install git+https://github.com/GoldenPlanetaryHealthLab/stagecoach.git
+```
+
+[^2]: Make a mental note of the context here: by "user level," we mean
+software and packages that are specific to the user's environment and are intended for
+for the user's convenience of working on a project. Their configuration does not
+influence the scientific substrate (i.e., the underlying data and models) of
+a project. By "project-agnostic tools," we mean a tool that that can be
+used across multiple projects on the cluster or on a separate machine. 
+Project-agnostic tools may be necessary for a
+specific project and the specific version of the tool, and date that it ran,
+must be recorded for project provenance, but _the tool itself_ can be
+used across multiple independent projects.
+
+### Hail the `stagecoach`!
+
+At the command line, hail the stagecoach with the `hail` command:
+
+```
+stagecoach hail
+```
+
+### Edit Your Manifest
+
+The `stagecoach` will deposit a `stagecoach_manifest.yml` file into your
+project directory. Simply fill in the fields as best you can, browsing
+the data sources available on The Frontier for reference.
+
+### Submit Your Manifest for Inspection
+
+Run the `inspect` command to submit your manifest for inspection by the Sheriff
+and pilot:
+
+```
+stagecoach inspect --manifest stagecoach_manifest.yml
+```
+
+The `stagecoach` pilot will automatically check your project
+for compliance with best practices, and will provide feedback 
+on how to fix any issues. The Sheriff will then clear your
+transfer request if your manifest is in order.
+
+### Stage Your Data!
+
+Once your manifest is cleared by the Sheriff, you can run the `stage` command again to stage your data:
+
+```
+stagecoach stage --manifest stagecoach_manifest.yml
+```

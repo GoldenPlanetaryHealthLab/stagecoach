@@ -5,6 +5,7 @@ on:
     branches:
       - main
   pull_request:
+    branches: [main]
 
 jobs:
   build-docs:
@@ -36,6 +37,13 @@ jobs:
         with:
           name: docs-html
           path: great-docs/_site
+          include-hidden-files: true
+
+      - name: Upload build timings
+        uses: actions/upload-artifact@v7
+        with:
+          name: build-timings
+          path: great-docs/_site/build-timings.json
 
   publish-docs:
     name: "Publish Docs"
@@ -58,6 +66,7 @@ jobs:
         uses: actions/upload-pages-artifact@v5
         with:
           path: great-docs/_site
+          include-hidden-files: true
 
       - name: Deploy to GitHub Pages
         id: deployment

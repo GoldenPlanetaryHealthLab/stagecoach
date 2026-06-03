@@ -19,6 +19,7 @@ extensions:
 params:
     export: true
 format: gfm
+guide-section: "For Developers: `stagecoach` Internals"
 ---
 
 To run stagecoach, we define a simple CLI using the `typer` library. This allows 
