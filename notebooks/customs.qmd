@@ -14,6 +14,7 @@ extensions:
     output-name: "customs"
     output-dir: "../src/stagecoach"
 format: gfm
+guide-section: "For Users: `stagecoach` Explained"
 ---
 
 We want to have a secure way of knowing whether a user

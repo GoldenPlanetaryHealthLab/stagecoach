@@ -225,7 +225,7 @@ def check_readme_exists(directory: Path) -> CheckResult:
 
 
 def check_project_structure(directory: Path) -> CheckResult:
-    has_rproj = (directory / "project.Rproj").exists()
+    has_rproj = (directory / "*.Rproj").exists()
     has_src = (directory / "src").exists() and (directory / "src").is_dir()
 
     if has_rproj or has_src:

@@ -4,7 +4,8 @@ citizen:
 frontier:
   name: golden-lab
   root: /n/holylabs/cgolden_lab/Lab/frontier
-  schema_version: 1.0
+  schema_version: 0.1
+  stagecoach_version: 0.1
 paths:
   goldmine: goldmine
   governance: governance

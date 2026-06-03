@@ -16,6 +16,25 @@ follows:
 
 This is easily translatable to a couple of simple checks.
 
+> [!TIP]
+>
+> ### Check Summary tl;dr
+>
+> | Check | What it means | How to fix it if it fails |
+> |----|----|----|
+> | project exists | You have created your project underneath the Golden Lab lab space path | Move your project to `/n/holylabs/cgolden_lab/Lab/frontier/works/town/<YOUR NAME>/<YOUR PROJECT>` |
+> | project is `git` tracked | Your project has a `git` repository to track changes to code files, and uses `.gitignore` to ignore sensitive data or sandbox directories | Run `git init` in your project directory |
+> | project has a readme | Your project has a README file that clearly describes what the project is about | Create a README file |
+> | project has a reproducible environment mechanism | Your project has a `requirements.txt`, `environment.yml`, `pyproject.toml`, or similar kind of file to define the software environment you are using | Create a `requirements.txt`, `pyproject.toml` or `environment.yml` file with `uv`, `conda`, `rv`, `renv`, or similar |
+> | project has code | Your project has a `src` or `R` directory with code in it, and any scientific conclusions you have can be reproduced from the code | Create a `src` directory and add some “hello world” code to it |
+> | project has a narrative | Your project uses literate programming to communicate the science clearly and effectively | Create at least one Quarto, Jupyter, or Rmarkdown notebook in your project to describe your work, what you are trying to do and why it is important |
+> | project has a reasonable structure | Your project is reasonably organized and not a mish-mash of scripts | Formally initialize your project with an [R project file](https://r4ds.hadley.nz/workflow-scripts.html) (`.Rproj`) or Python [`src`](https://playbooks.omsf.io/developer/repository-structure/use-a-src-or-flat-layout/) format |
+>
+> The checks are designed to be simple and easy to implement, and each
+> one’s code is documented below. If you believe a particular check
+> needs to be implemented or improved, please submit a [Pull
+> Request](https://github.com/GoldenPlanetaryHealthLab/stagecoach/pulls)!
+
 First, we import the `Sheriff` class from the `sheriff` module. Then, we
 create an instance of the `Sheriff` class and call the `check_citizen`
 method to perform the checks.
@@ -69,6 +88,7 @@ and figure out how to get the data to the user’s specified location.
 #         "name": "golden-lab",
 #         # the version may be used in future
 #         "schema_version": 1.0,
+#         "stagecoach_version": 0.1,
 
 #         # critical: we must know where the frontier starts
 #         "root": "/n/holylabs/cgolden_lab/Lab/frontier"
