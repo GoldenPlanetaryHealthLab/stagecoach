@@ -1,0 +1,28 @@
+name: Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  datalad:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - name: Install git-annex and Python tooling
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y git-annex
+          python -m pip install uv
+          uv tool install datalad==1.4.1
+          uv sync --locked
+      - name: Test using synthetic RIA datasets
+        run: |
+          datalad --version
+          git-annex version
+          uv run --locked python -m unittest discover -s tests -v

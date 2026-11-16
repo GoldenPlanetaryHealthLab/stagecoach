@@ -171,11 +171,15 @@ def stage(
     """
     console = Console()
     customs_sheriff = Sheriff(console)
-    staged = StageCoach(
-        sheriff=customs_sheriff,
-        console=console,
-        manifest_path=manifest_path
-    ).stage()
+    try:
+        staged = StageCoach(
+            sheriff=customs_sheriff,
+            console=console,
+            manifest_path=manifest_path
+        ).stage()
+    except Exception as exc:
+        failure_panel(console, str(exc))
+        raise typer.Exit(code=1)
     if not staged:
         raise typer.Exit(code=1)
 ```

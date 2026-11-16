@@ -68,7 +68,6 @@ the data to the user.
 ```{python}
 #| sorting-hat: keep
 
-import yaml
 from contextlib import nullcontext
 from stagecoach.outpost import create_outpost
 from stagecoach.issue_manifest import issue_manifest
@@ -76,6 +75,7 @@ from stagecoach.manifest_checker import ManifestChecker
 from stagecoach.checks import Severity
 from stagecoach.customs import check_gold_mine_clearance, check_globus_clearance
 from stagecoach.stage import create_stage_directories, stage_data_from_fasrc, stage_data_from_globus, StageResult
+from stagecoach.datalad import check_datalad_clearance, stage_data_from_datalad
 from sheriff.sheriff import Sheriff
 from rich.console import Console
 from pathlib import Path
@@ -121,9 +121,9 @@ class StageCoach:
         manifest_path: str | Path = "stagecoach_manifest.yml",
         console: Console | None = None,
     ) -> None:
-        self.sheriff = sheriff or Sheriff()
-        self.manifest_path = Path(manifest_path)
         self.console = console or Console()
+        self.sheriff = sheriff or Sheriff(self.console)
+        self.manifest_path = Path(manifest_path)
 
     def hail(
         self,
@@ -222,7 +222,12 @@ class StageCoach:
         for result in checks:
             check_result(console, result)
 
-        manifest = yaml.safe_load(self.manifest_path.read_text())
+        if not checker.passes(checks):
+            failure_panel(console, "Manifest checks failed. Please review the results above.")
+            handbook_note(console)
+            return False
+
+        manifest = checker.manifest
 
         # check gold mine access
         if manifest.get("sources", {}).get("01_gold_mine", {}).get("enabled"):
@@ -265,13 +270,17 @@ class StageCoach:
             info(console, "Dataverse access requested. Checking with customs...")
             warning(console, "Dataverse access checks are not yet implemented. Please ensure you have access to the Dataverse dataset before proceeding.")
 
-        if not checker.passes():
-            console.print()
-            failure_panel(console, "⚠️ Manifest checks failed. Please review the results above.")
-            handbook_note(console)
+        if manifest.get("sources", {}).get("04_datalad", {}).get("enabled"):
+            info(console, "Inspecting pinned DataLad metadata; no content will be retrieved...")
+            clearance = check_datalad_clearance(manifest)
+            for item in clearance.details.get("items", []):
+                if not item["cleared"]:
+                    error(console, f"DataLad item {item['name']}: {item['error']}")
+            if not clearance.cleared:
+                error(console, clearance.message)
+                return False
+            success(console, clearance.message)
 
-            return False
-        
         console.print()
         banner(console, "✅ Manifest checks passed, you're cleared for staging! Run `stagecoach stage` to bring the data into your environment.")
         
@@ -298,14 +307,21 @@ class StageCoach:
         console = console or self.console
         banner(console, "🚂 Staging the data...")
 
-        manifest = yaml.safe_load(self.manifest_path.read_text())
+        checker = ManifestChecker(self.manifest_path, Severity.ERROR)
+        checks = checker.run_all()
+        for result in checks:
+            check_result(console, result)
+        if not checker.passes(checks):
+            failure_panel(console, "Project preflight failed; no data has been staged.")
+            return False
+        manifest = checker.manifest
 
         # create stage directories
         create_stage_directories(manifest, console, gitignore=True)
 
         # fasrc
         fasrc = manifest.get("sources", {}).get("01_gold_mine", {})
-        if fasrc['enabled']:
+        if fasrc.get('enabled', False):
             fasrc_stageresult = stage_data_from_fasrc(manifest, console)
             if fasrc_stageresult.staged:
                 success(console, "Gold Mine data staged successfully.")
@@ -320,7 +336,7 @@ class StageCoach:
         
         # globus
         globus = manifest.get("sources", {}).get("02_globus", {})
-        if globus['enabled']:
+        if globus.get('enabled', False):
             globus_stageresult = stage_data_from_globus(manifest, console)
             if globus_stageresult.staged:
                 success(console, "Globus data staged successfully.")
@@ -335,7 +351,7 @@ class StageCoach:
 
         # dataverse
         dataverse = manifest.get("sources", {}).get("03_dataverse", {})
-        if dataverse['enabled']:
+        if dataverse.get('enabled', False):
             warning(console, "Dataverse staging is not yet implemented. Please stage the data manually and place it in the appropriate directory.")
             dataverse_stageresult = StageResult(
                 source="03_dataverse",
@@ -349,13 +365,25 @@ class StageCoach:
                 message="Dataverse staging not requested.",
             )
         
+        datalad = manifest.get("sources", {}).get("04_datalad", {})
+        if datalad.get("enabled", False):
+            datalad_stageresult = stage_data_from_datalad(
+                manifest, console, manifest_sha256=checker.manifest_sha256,
+            )
+            if datalad_stageresult.staged:
+                success(console, "Required DataLad selections are locally available; see receipt for details.")
+            else:
+                error(console, f"DataLad staging failed: {datalad_stageresult.message}")
+        else:
+            datalad_stageresult = StageResult("04_datalad", True, "DataLad staging not requested.")
+
         final_staging = all(
             result.staged
-            for result in [fasrc_stageresult, globus_stageresult, dataverse_stageresult]
+            for result in [fasrc_stageresult, globus_stageresult, dataverse_stageresult, datalad_stageresult]
         )
 
         if final_staging:
-            banner(console, "🪎 All data staged successfully! You're ready to start working!")
+            banner(console, "Required staging operations succeeded. Review source messages and receipts for details.")
             return True
         else:
             error(console, "Some data sources failed to stage. Please review the messages above and address any issues in your manifest.")
