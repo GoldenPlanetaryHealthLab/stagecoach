@@ -1,0 +1,21 @@
+# Copy into your project and run Stagecoach from that project's root.
+# Obtain access to the RIA store before staging. This is the pinned Depot release.
+project:
+  project_name: kiribati-analysis
+  project_working_dir: .
+  input_data_dir: data/inputs
+  intermediate_data_dir: data/intermediates
+  output_data_dir: data/outputs
+  sandbox_dir: sandbox
+sources:
+  04_datalad:
+    enabled: true
+    items:
+      - name: kiribati-biomarkers
+        source: "ria+file:///n/holylabs/LABS/cgolden_lab/Lab/frontier/gold_mine/02_prospects/kiribati-biomarkers#~kiribati-biomarkers"
+        dataset_id: "98c72378-28b0-47a3-9b00-a6d746e31c63"
+        revision: "428bb3ae8faecd3f05ab6fab027b06ff34231834"
+        paths:
+          - releases/v0.2.2
+        get_source: goldmine-storage
+        required: true

@@ -9,8 +9,10 @@ pass.
 
 ``` python
 import yaml
+import hashlib
 from pathlib import Path
 from stagecoach.checks import *
+from stagecoach.datalad import validate_datalad_manifest
 
 class ManifestChecker:
     """
@@ -33,7 +35,15 @@ class ManifestChecker:
         Failure threshold used by ``passes``.
     """
     def __init__(self, manifest_file: str | Path, severity_level: Severity):
-        self.manifest =  yaml.safe_load(Path(manifest_file).read_text())
+        content = Path(manifest_file).read_bytes()
+        self.manifest_sha256 = hashlib.sha256(content).hexdigest()
+        self.manifest = yaml.safe_load(content)
+        if not isinstance(self.manifest, dict) or not isinstance(self.manifest.get("project"), dict):
+            raise ValueError("Manifest must contain a project mapping.")
+        directory = self.manifest["project"].get("project_working_dir")
+        if not isinstance(directory, str) or not directory.strip():
+            raise ValueError("project.project_working_dir must be a nonempty string.")
+        validate_datalad_manifest(self.manifest)
         self.project_dir = self.manifest['project']['project_working_dir']
         self.severity_level = severity_level
 
@@ -57,7 +67,7 @@ class ManifestChecker:
             check_project_structure(Path(self.project_dir))
         ]
 
-    def passes(self) -> bool:
+    def passes(self, results: list[CheckResult] | None = None) -> bool:
         """
         Determine whether the manifest passes the configured threshold.
 
@@ -68,7 +78,7 @@ class ManifestChecker:
             ``self.severity_level`` and ``False`` otherwise.
         """
 
-        results = self.run_all()
+        results = self.run_all() if results is None else results
         threshold = SEVERITY_RANK[self.severity_level]
 
         return all(

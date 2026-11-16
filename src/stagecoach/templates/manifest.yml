@@ -46,3 +46,13 @@ sources:
     - name: example_dataverse_item
       files_regex: []
       required: true
+  04_datalad:
+    enabled: false
+    items:
+    - name: example_datalad_item
+      source: null
+      dataset_id: null
+      revision: null
+      paths: []
+      get_source: null
+      required: true
